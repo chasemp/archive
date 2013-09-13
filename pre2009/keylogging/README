@@ -1,0 +1,6 @@
+Before I discovered CVS really...ha.  Wrote a bunch of crap for keylogging. Used the pywinbind
+keylogging hook stuff.  Basically meant it to be stealthy, encrypted stored key strokes, and sent out
+in batches.  I'm missing a lot of later stuff here.  I had it buffering and transmitting stored 
+keystrokes in random batches to avoid profiling with a snort signature and a bunch of other stuff. 
+
+No real reason just fun.  It's...interesting to look back at now.

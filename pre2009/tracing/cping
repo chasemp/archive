@@ -1,0 +1,573 @@
+#!/usr/bin/env python
+
+import os, sys, socket, struct, select, time, datetime, signal, email, smtplib
+from format_columns import *
+#from easygui import *
+from ping1 import *
+from optparse import OptionParser
+#import winsound
+from ConfigParser import ConfigParser
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEBase import MIMEBase
+from email.MIMEText import MIMEText
+from email.Utils import COMMASPACE, formatdate
+from email import Encoders
+from tcpscan import *
+
+def get_args():
+  """
+  Gets arguments from the user at the CLI and translates them into values.
+  """
+
+  global verbose_con, destination, destination_timeout, notify_con, count_con, sleep_interval_con, reverse_con, emailme_con, alert_thold_con, port_con, mode
+  usage = """\n
+
+cping.exe 
+
+	-d <host>	Host to ping.  This can be either DNS or IP.
+	-t <#>		Specify timeout with a number.  Default is 2.
+	-c <#>		number of pings.  Default is 5.
+	-n		Enable notifications.  Popup and sound after 3 timeouts.
+	-e		Emails a notification when triggered.  Uses cping.ini.
+	-r		Reverse ping notification criteria.  3 successful.
+	-a		Specify alert threshold with a number.
+
+
+NOTE: Configure defaults in cping.ini
+"""
+  parser = OptionParser(usage)
+  parser.add_option("-t", "--timeout", dest="timeout", default="2",
+                    help="Seconds to wait for host to respond.")
+  parser.add_option("-c", "--count", dest="count",
+                    help="The number of echo requests to send.")
+  parser.add_option("-a", "--alert_thold", dest="alert_thold",
+                    help="The number of failures (normal) or successes (reverse) at which to trigger email or notification.")
+  parser.add_option("-p", "--port", dest="port",
+                    help="TCP port to ping.") 
+  parser.add_option("-s", "--sleep", dest="sleep",
+                    help="The number of seconds between echo requests.")
+  parser.add_option("-n", "--notify",
+                    action="store_true", dest="notify",
+		    help="Provides a GUI and audible notification at the defined threshold.")
+  parser.add_option("-e", "--email",
+                    action="store_true", dest="emailme",
+		    help="Provides an email notification at the defined threshold.")
+  parser.add_option("-r", "--reverse",
+                    action="store_true", dest="reverse",
+		    help="Provides a notification when a host is responsive.")
+  parser.add_option("-v", "--verbose",
+                    action="store_true", dest="verbose", default=False,
+		    help="Returns .")
+		    
+  (options, args) = parser.parse_args()
+  if "," in sys.argv[1]:
+    destination_list = []
+    for host in sys.argv[1].split(','):
+      destination_list.append(host)
+    destination = destination_list
+    print destination
+  else:
+    destination = sys.argv[1]
+    print destination
+  alert_thold_con = options.alert_thold
+  notify_con = options.notify
+  emailme_con = options.emailme
+  reverse_con = options.reverse
+  sleep_interval_con = options.sleep
+  count_con = options.count
+  destination_timeout = int(options.timeout)
+  verbose_con = options.verbose
+  port_con = options.port
+  if port_con:
+    mode = "tcp"
+    port_con = int(port_con)
+  else:
+    mode = "icmp"
+
+
+  
+def cping(dest_addr, timeout = 2, count = 5, sleep_int = 2, host_column = 20, type = "standard", alert_thold = 10, seq_mode = 1, emailme = False):
+    global failed_pings, success_pings, total_pings, host_state, seq_failed, bar, seq_success, address
+
+    """
+    Send >count< ping to >dest_addr< with the given >timeout< and display
+    the result.
+    """
+    #Specify initial states
+    failed_pings = 0
+    success_pings = 0
+    total_pings = 0
+    seq_failed = 0
+    seq_success = 0
+    host_state = "UNKNOWN"
+    #Converst alert_thold to a number
+    alert_thold = int(alert_thold)
+    #define console separator
+    bar = "________________________________________________________________________"
+    
+    print ""
+    
+    #Print column headers
+    if type == "standard":
+        print FormatColumns(((14, CENTER), (host_column, CENTER), (14, CENTER)),["Time (H, M, S)", "Host", "Delay"]), "	| ", "Total/Failed"
+    if type == "reverse":
+        print FormatColumns(((14, CENTER), (host_column, CENTER), (14, CENTER)),["Time (H, M, S)", "Host", "Delay"]), "	| ", "Total/Success"
+    
+
+    print bar
+    #Perform one ping for each count specified
+    for i in xrange(count):
+	    
+        time.sleep(sleep_int)
+	total_pings = total_pings + 1
+	
+        try:
+            delay  =  do_one(dest_addr, timeout)
+	    
+        except socket.gaierror, e:
+	    print ""
+            print "		ping failed. (socket error: '%s')" % e[1]
+	    print ""
+	    print "		%s -h for help." % (sys.argv[0])
+            break
+ 
+        if delay  ==  None:
+	    host_state = "UNRESPONSIVE"		    
+            failed_pings = failed_pings + 1
+	    seq_failed = seq_failed + 1
+	    seq_success = 0
+	    
+            if failed_pings >= 1:
+                if type == "standard":
+                    print ""
+		    print FormatColumns(((14, CENTER), (host_column, CENTER), (14, RIGHT)),[time.strftime('%H, %M, %S'), dest_addr, "NO RESPONSE!"]), " | ", total_pings, "/", failed_pings, "(%ssec.)" % (timeout)
+		    print ""
+		if type == "reverse":
+                    print ""
+		    print FormatColumns(((14, CENTER), (host_column, CENTER), (14, RIGHT)),[time.strftime('%H, %M, %S'), dest_addr, "NO RESPONSE!"]), " | ", total_pings, "/", success_pings, "(%ssec.)" % (timeout)
+		    print ""
+		
+            if type == "standard":
+		
+                if notify:
+                    if seq_failed == alert_thold and seq_mode == 1 or failed_pings == alert_thold and seq_mode == 0:
+			host_down = "host_down.gif"
+			if emailme:
+                            for address in email:
+			        print bar
+		                notify_email()
+			        print bar
+                        notify_user("SystemHand", "host_down.gif", "%s is %s!" % (dest_addr, host_state), "%s DOWN!" % (dest_addr))
+
+        else:
+	    seq_failed = 0
+	    host_state = "RESPONSIVE"         
+            success_pings = success_pings + 1
+	    seq_success = seq_success + 1
+      
+            delay  =  delay * 1000
+	      
+            if type == "standard":
+                print FormatColumns(((14, CENTER), (host_column, CENTER), (14, RIGHT)),[time.strftime('%H, %M, %S'), dest_addr, "%0.4fms" % (delay)]), " | ", total_pings, "/", failed_pings
+		
+            if type == "reverse":
+                print FormatColumns(((14, CENTER), (host_column, CENTER), (14, RIGHT)),[time.strftime('%H, %M, %S'), dest_addr, "%0.4fms" % (delay)]), " | ", total_pings, "/", success_pings
+		
+                if seq_success == alert_thold and seq_mode == 1 or success_pings == alert_thold and seq_mode == 0:
+                    host_up = "host_up.gif"
+                    if emailme:
+                        for address in email:
+			    print bar
+		            notify_email()
+			    print bar
+			    #send_mail("CPING.exe", address, "%s %s!" % (destination, host_state), "mail_body", attach=[], server=mailserver)
+                    if notify:
+			notify_user("SystemHand", host_up, "%s is %s!" % (dest_addr, host_state), "%s UP!" % (dest_addr))
+
+
+
+
+	      
+    print
+    
+   
+def cping_tcp(dest_addr, port, alert_thold, sleep_int, type = "standard", host_column = 20, count = 5):
+    global failed_pings, success_pings, total_pings, host_state, seq_failed, bar, seq_success, address
+
+    """
+    Send >count< ping to >dest_addr< with the given >timeout< and display
+    the result.
+    """
+    #Specify initial states
+    failed_pings = 0
+    success_pings = 0
+    total_pings = 0
+    seq_failed = 0
+    seq_success = 0
+    host_state = "UNKNOWN"
+    #Converst alert_thold to a number
+    alert_thold = int(alert_thold)
+    #define console separator
+    bar = "________________________________________________________________________"
+    
+    print ""
+    
+    #Print column headers
+    if type == "standard":
+        print FormatColumns(((14, CENTER), (host_column, CENTER), (5, CENTER), (6, CENTER)),["Time (H, M, S)", "Host", "Port", "State"]), "	| ", "Total/Failed"
+    if type == "reverse":
+        print FormatColumns(((14, CENTER), (host_column, CENTER), (5, CENTER), (6, CENTER)),["Time (H, M, S)", "Host", "Port", "State"]), "	| ", "Total/Success"
+    
+
+    print bar
+    #Perform one ping for each count specified
+    for i in xrange(count):
+	    
+        time.sleep(sleep_int)
+	total_pings = total_pings + 1
+	
+        try:
+            scan_results = scan(dest_addr, port_con, port_con)
+	    tcp_state = str(scan_results["state"])
+	    print tcp_state
+	    start_port = str(scan_results["start_port"])
+	    
+        except socket.gaierror, e:
+	    print ""
+            print "		ping failed. (socket error: '%s')" % e[1]
+	    print ""
+	    print "		%s -h for help." % (sys.argv[0])
+            break
+ 
+        if tcp_state == "CLOSED":
+	    host_state = "UNRESPONSIVE"		    
+            failed_pings = failed_pings + 1
+	    seq_failed = seq_failed + 1
+	    seq_success = 0
+	    
+            if failed_pings >= 1:
+                if type == "standard":
+                    print ""
+		    print FormatColumns(((14, CENTER), (host_column, CENTER), (5, CENTER), (6, CENTER)),[time.strftime('%H, %M, %S'), dest_addr, start_port, tcp_state]), " | ", total_pings, "/", failed_pings
+		    print ""
+		if type == "reverse":
+                    print ""
+		    print FormatColumns(((14, CENTER), (host_column, CENTER), (5, CENTER), (6, CENTER)),[time.strftime('%H, %M, %S'), dest_addr, start_port, tcp_state]), " | ", total_pings, "/", success_pings
+		    print ""
+		
+            if type == "standard":
+		
+                if notify:
+                    if seq_failed == alert_thold and seq_mode == 1 or failed_pings == alert_thold and seq_mode == 0:
+			host_down = "host_down.gif"
+			if emailme:
+                            for address in email:
+			        print bar
+		                notify_email()
+			        print bar
+                        notify_user("SystemHand", "host_down.gif", "%s is %s!" % (dest_addr, host_state), "%s DOWN!" % (dest_addr))
+
+        elif tcp_state == "OPEN":
+	    seq_failed = 0
+	    host_state = "RESPONSIVE"         
+            success_pings = success_pings + 1
+	    seq_success = seq_success + 1
+      
+     
+            if type == "standard":
+                print FormatColumns(((14, CENTER), (host_column, CENTER), (5, CENTER), (6, RIGHT)),[time.strftime('%H, %M, %S'), dest_addr, start_port, tcp_state + "  "]),"| ", total_pings, "/", failed_pings
+		
+            if type == "reverse":
+                print FormatColumns(((14, CENTER), (host_column, CENTER), (5, CENTER), (6, CENTER)),[time.strftime('%H, %M, %S'), dest_addr, start_port, tcp_state + "  "]), "| ", total_pings, "/", success_pings
+		
+                if seq_success == alert_thold and seq_mode == 1 or success_pings == alert_thold and seq_mode == 0:
+                    host_up = "host_up.gif"
+                    if emailme:
+                        for address in email:
+			    print bar
+		            notify_email()
+			    print bar
+			    #send_mail("CPING.exe", address, "%s %s!" % (destination, host_state), "mail_body", attach=[], server=mailserver)
+                    if notify:
+			notify_user("SystemHand", host_up, "%s is %s!" % (dest_addr, host_state), "%s UP!" % (dest_addr))
+
+        else:
+	  print "unknown tcp status"
+	  
+    print
+
+
+def notify_email():
+    result = success_calc(success_pings, total_pings)
+    
+    if port_con:
+      body_essential= """\
+  HOST:	%s.  \n  Port:	%s\n  State:	%s (%s). \n  Result: %s \n
+    """ % (destination, port_con, host_state, time.strftime('%H, %M, %S'), result)
+
+    else:
+      body_essential= """\
+  HOST:	%s.  \n  State:	%s (%s). \n  Result: %s \n
+    """ % (destination, host_state, time.strftime('%H, %M, %S'), result)
+
+    body_verbose= """  Info:\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s
+   """ % ("  	HOST:		%s" % (destination),  "  	NOTIFY:	%s" % (notify), "  	REVERSE:	%s" % (reverse),
+"  	SLEEP:	%s" % (sleep_interval),  "  	COUNT:	%s" % (count), "  	TIMEOUT:	%s" % (destination_timeout), 
+"  	HOST LEN:	%s" % (max_host_length), "  	EMAIL:	%s" % (emailme))
+
+    if verbose:
+        send_mail("CPING.exe", address, "%s %s!" % (destination, host_state), body_essential + "\n\n" + body_verbose, attach=[], server=mailserver)
+    else:
+	send_mail("CPING.exe", address, "%s %s!" % (destination, host_state), body_essential, attach=[], server=mailserver)
+
+    
+def notify_user(sound, popup_image, popup_message, popup_title): 
+    if notify:
+	print "%s\n	%s is %s! \n\n	Success: %s (%s Sequential)  Failed: %s (%s Sequential)\n%s" % (bar, destination, host_state, success_pings, seq_success, failed_pings, seq_failed, bar)
+	print "Acknowledge GUI alert to continue...\n"
+	if sound_state:
+	    winsound.PlaySound(sound, winsound.SND_ALIAS)
+        msgbox(popup_message, popup_title, ok_button="Acknowledged!", image=popup_image)
+	
+
+def log_line(line, file):
+  filename = file
+  file = open(filename, 'a')
+  file.write(line)
+  file.close()    
+
+def print_options():
+  print ""
+  print "	HOST:		%s" % (destination)
+  if mode == "tcp":
+    print "	PORT:		%s" % (port_con)
+  print "	VERBOSE:	%s" % (verbose)
+  print "	NOTIFY:		%s" % (notify)
+  if notify:
+    print "	SOUND:		%s" % (sound_state)
+    print "	SEQ:		%s" % (seq_mode)
+  print "	ALERT THOLD:	%s" % (alert_threshold)
+  print "	ALERT SEQ:	%s" % (seq_mode)
+  print "	REVERSE:	%s" % (reverse)
+  print "	SLEEP:		%s" % (sleep_interval)
+  print "	COUNT:		%s" % (count)
+  print "	TIMEOUT:	%s" % (destination_timeout)
+  print "	HOST LEN MAX:	%s" % (max_host_length)
+  
+  if emailme:
+    for value in email:
+      print "	ADDR:		%s" % (value)
+      print "	SERVER:		%s" % (mailserver)
+
+    
+    
+def parse_email_config():
+  filename = 'cping.ini'
+  config = ConfigParser()
+  config.read([filename])
+  email_list = config.get('email', 'address')
+  email_list = email_list.split(",")
+  server = config.get('email', 'server')
+  return email_list, server
+
+def parse_email_default():
+  filename = 'cping.ini'
+  config = ConfigParser()
+  config.read([filename])
+  emailme_file = config.get('email', 'default')
+  emailme_file = bool_vert(emailme_file)
+  return emailme_file
+  
+def parse_format_config():
+  filename = 'cping.ini'
+  config = ConfigParser()
+  config.read([filename])
+  max_host_length = config.get('format', 'max_host_length')
+  max_host_length = int(max_host_length) 
+  return max_host_length
+
+def parse_notify_config():
+  filename = 'cping.ini'
+  config = ConfigParser()
+  config.read([filename])
+  seq_mode = config.get('notifications', 'sequential')
+  alert_threshold = config.get('notifications', 'alert_threshold')
+  sound_on = config.get('notifications', 'sound_on')
+  notify_file = config.get('notifications', 'default')
+  #convert to boolian objects
+  notify_file = bool_vert(notify_file)
+  sound_on = bool_vert(sound_on)
+  seq_mode = bool_vert(seq_mode)
+ 
+  return sound_on, alert_threshold, seq_mode, notify_file
+
+def parse_main_config():
+  filename = 'cping.ini'
+  config = ConfigParser()
+  config.read([filename])
+  timeout = config.get('main', 'timeout')
+  count = config.get('main', 'count')
+  reverse = config.get('main', 'reverse')
+  verbose = config.get('main', 'verbose')
+  #convert reverse to a boolian object
+  verbose = bool_vert(verbose)
+  reverse = bool_vert(reverse)
+  sleep = config.get('main', 'sleep')
+  #convert sound_on to an integer
+  return timeout, count, reverse, sleep, verbose
+
+
+def send_mail(from_addr, to_addr, subject, body, attach=[], server="localhost"):
+  try:
+    print ""
+    print "	Sending email..."
+    msg = MIMEMultipart()
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = subject
+    msg.attach( MIMEText(body) )
+
+
+    for f in attach:
+      print "	Attaching file %s" % (f)
+      part = MIMEBase('application', "octet-stream")
+      part.set_payload( open(f,"rb").read() )
+      Encoders.encode_base64(part)
+      part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(f))
+      msg.attach(part)
+
+
+    smtp = smtplib.SMTP(server)
+    print ""
+    smtp.sendmail(from_addr, to_addr, msg.as_string())
+    smtp.close()
+    print "	Mail sent!"
+    print ""
+  except:
+      print "	Mail failed to send!"
+
+def success_calc(success, total):
+	percent_success = success_pings * 100 / total_pings
+	result = "	%s out of %s succeeded. Percentage: %s" % (success_pings, total_pings, percent_success)  
+	return result
+	
+def bool_vert(parameter):
+  bDict = {'false':False, 'true':True, 'yes':True, 'no':False, '1':True, '0':False}
+  return bDict[parameter.lower()]
+  
+def set_variables():
+  if emailme_con:
+    emailme = emailme_con
+  else:
+    emailme = emailme_file
+  if verbose_con:
+    verbose = verbose_con
+  else:
+    verbose = verbose_file
+  if notify_con:
+    notify = notify_con
+  else:
+    notify = notify_file
+  if alert_thold_con:
+    alert_threshold = alert_thold_con
+  else:
+    alert_threshold = alert_threshold_file
+  if sleep_interval_con:
+    sleep_interval = sleep_interval_con
+    sleep_interval = int(sleep_interval)
+  else:
+    sleep_interval = sleep_interval_file
+    sleep_interval = int(sleep_interval)
+  if reverse_con == True:
+    reverse = reverse_con
+  else:
+    reverse = reverse_file
+  if count_con:
+    count = count_con
+    count = int(count)
+  else:
+    count = count_file
+    count = int(count)
+    #set option precendence
+  if count == 0:
+    print ""
+    print "	NOTICE: Changing count to 86400."
+    print ""
+    count = 86400
+
+    
+  return emailme, verbose, notify, alert_threshold, sleep_interval, reverse, count, mode
+	
+if __name__ == '__main__':
+	
+  #parse console arguments for processing
+  get_args()
+  
+
+  
+  emailme_file= parse_email_default()
+    
+  #Get email config
+  if emailme_con or emailme_file:
+    email, mailserver = parse_email_config()
+  
+  #Get format config  
+  max_host_length = parse_format_config()
+  
+  #Get notification config
+  sound_state_file, alert_threshold_file, seq_mode_file, notify_file = parse_notify_config()
+  
+  #Get main config
+  timeout_file, count_file, reverse_file, sleep_interval_file, verbose_file = parse_main_config()
+  
+  #Determine which arguments to use.  Parse from file and console.  Console arguments take precedence.
+  emailme, verbose, notify, alert_threshold, sleep_interval, reverse, count, mode= set_variables()
+  
+  print notify
+  
+  #Set sound state
+  sound_state = sound_state_file
+  
+  #Set sequence state for notications
+  seq_mode = seq_mode_file
+  
+  #print options if verbose is True
+  if verbose:
+    print_options()
+    
+  #Set up script to handle quit signals
+  signal.signal(signal.SIGINT, signal_handler)
+  
+  #execute a reverse tcp ping if -r option is True
+  if port_con and mode == "tcp" and reverse:
+    cping_tcp(destination, port_con, alert_thold = alert_threshold, type="reverse", sleep_int = sleep_interval, count=count)
+    
+  #execute a standard tcp ping if -r option is False
+  elif port_con and mode == "tcp":
+    cping_tcp(destination, port_con, alert_thold = alert_threshold, sleep_int = sleep_interval, count=count)    
+    
+  #execute a reverse ping if '-r' option is True
+  elif reverse and mode == "icmp":
+    cping(destination, timeout=destination_timeout, count=count, sleep_int = sleep_interval, host_column = max_host_length, type="reverse", alert_thold = alert_threshold, seq_mode = 1, emailme = emailme)
+    
+  #execute a standard ping if '-r' option is False
+  else:
+    cping(destination, timeout=destination_timeout, count=count, sleep_int = sleep_interval, host_column = max_host_length, alert_thold = alert_threshold, seq_mode = 0, emailme = emailme)
+
+  result = success_calc(success_pings, total_pings)
+  
+  mail_body= """\
+ HOST:	%s.  \n State:	%s (%s). \n Result: %s \n\n
+   """ % (destination, host_state, time.strftime('%H, %M, %S'), result)
+  if verbose:
+      mail_body= """\
+ \n HOST:	%s.  \n State:	%s (%s). \n Result: %s \n\n\n Info:\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n
+   """ % (destination, host_state, time.strftime('%H, %M, %S'), result, "	HOST:		%s" % (destination),
+  "	NOTIFY:	%s" % (notify), "	REVERSE:	%s" % (reverse), "	SLEEP:	%s" % (sleep_interval),
+  "	COUNT:	%s" % (count), "	TIMEOUT:	%s" % (destination_timeout), "	HOST LEN:	%s" % (max_host_length),
+  "	EMAIL:	%s" % (emailme))
+
+     
+  print result
+           
