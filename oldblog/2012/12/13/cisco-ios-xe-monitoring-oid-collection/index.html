@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>cisco ios xe monitoring oid collection &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>cisco ios xe monitoring oid collection</h1>
+            <h2>Thursday, December 13, 2012 <span>&raquo;</span> <a href="/tags/cisco/">cisco</a>, <a href="/tags/oid/">oid</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Cisco IOS-XE OID&#39;s for monitoring</p>
+<h4>Memory Walk OID</h4><pre><code>.1.3.6.1.4.1.9.9.48.1.1.1
+</code></pre>
+<p>This should provide your memory bank OID space.</p>
+<h4>OID keys for memory stats</h4><pre><code>mem_bank = 1.3.6.1.4.1.9.9.48.1.1.1.2.
+mem_used = 1.3.6.1.4.1.9.9.48.1.1.1.5.
+mem_free = 1.3.6.1.4.1.9.9.48.1.1.1.6.
+</code></pre><h4>CPU Walk OID</h4><pre><code>.1.3.6.1.4.1.9.9.109.1.1.1.1.2
+</code></pre><h4>OID key for CPU usage</h4><pre><code>.1.3.6.1.4.1.9.9.109.1.1.1.1.8.
+</code></pre><h4>Interface Walk OID&#39;s</h4><pre><code>64 bit counter use: .1.3.6.1.2.1.31.1.1.1
+32 bit counter use: .1.3.6.1.2.1.2.2
+</code></pre>
+<p>32 bit counter interface oid&#39;s</p>
+<h4>32bit counter MIBs</h4>
+<pre><code>
+ifname = 1.3.6.1.2.1.2.2.1.2.
+mtu = 1.3.6.1.2.1.2.2.1.4.
+ifspeed = 1.3.6.1.2.1.2.2.1.5.
+ifAdminStatus = 1.3.6.1.2.1.2.2.1.7.
+ifOperStatus = 1.3.6.1.2.1.2.2.1.8.
+ifInOctets = .1.3.6.1.2.1.31.1.1.1.6.
+ifOutOctets = 1.3.6.1.2.1.2.2.1.16.
+physadd = 1.3.6.1.2.1.2.2.1.6.
+</code></pre>
+<h4>64 bit counter interface oid&#39;s</h4>
+<pre><code>
+ifname = 1.3.6.1.2.1.31.1.1.1.1.
+ifspeed = 1.3.6.1.2.1.31.1.1.1.15.
+ifoperstatus = 1.3.6.1.2.1.31.1.1.1.17.
+ifinoctets = 1.3.6.1.2.1.31.1.1.1.6.
+ifalias = 1.3.6.1.2.1.31.1.1.1.18.
+ifinmulticastpkts = 1.3.6.1.2.1.31.1.1.1.2.
+ifoutmulticastpkts = 1.3.6.1.2.1.31.1.1.1.4.
+ifinbroadcastpkts = 1.3.6.1.2.1.31.1.1.1.3.
+ifoutbroadcastpkts = 1.3.6.1.2.1.31.1.1.1.5.
+ifoutoctets = 1.3.6.1.2.1.31.1.1.1.10.
+</code></pre>
+<h4>Using The Above OID Successfully</h4>
+<p>So take the memory walk oid.  Want to discover what memory banks we can monitor.</p>
+<pre><code>snmpwalk -v 2c -c community yourhostip .1.3.6.1.4.1.9.9.48.1.1.1
+</code></pre>
+<pre><code>
+CISCO-SMI::ciscoMgmt.48.1.1.1.2.1 = STRING: "Processor"
+CISCO-SMI::ciscoMgmt.48.1.1.1.2.14 = STRING: "lsmpi_io"
+CISCO-SMI::ciscoMgmt.48.1.1.1.3.1 = INTEGER: 0
+CISCO-SMI::ciscoMgmt.48.1.1.1.3.14 = INTEGER: 0
+CISCO-SMI::ciscoMgmt.48.1.1.1.4.1 = INTEGER: 1
+CISCO-SMI::ciscoMgmt.48.1.1.1.4.14 = INTEGER: 1
+CISCO-SMI::ciscoMgmt.48.1.1.1.5.1 = Gauge32: 643028280
+CISCO-SMI::ciscoMgmt.48.1.1.1.5.14 = Gauge32: 6294116
+CISCO-SMI::ciscoMgmt.48.1.1.1.6.1 = Gauge32: 1097647748
+CISCO-SMI::ciscoMgmt.48.1.1.1.6.14 = Gauge32: 972
+CISCO-SMI::ciscoMgmt.48.1.1.1.7.1 = Gauge32: 1097325320
+CISCO-SMI::ciscoMgmt.48.1.1.1.7.14 = Gauge32: 968
+</code></pre> 
+
+<p>Above we can see two distinct memory banks.  One with OID&#39;s ending in &#39;14 and one with<br>
+OID&#39;s ending in &#39;1&#39;.</p>
+<h4>Getting our stats for the &#39;lsmpi_io&#39; mem bank, or &#39;14&#39;</h4>
+<pre><code>
+snmpget -v 2c -c community yourhostip 1.3.6.1.4.1.9.9.48.1.1.1.2..14
+1.3.6.1.4.1.9.9.48.1.1.1.2..14: Unknown Object Identifier (Sub-id not found: ciscoMgmt -> .14)
+
+snmpget -v 2c -c community yourhostip 1.3.6.1.4.1.9.9.48.1.1.1.2.14
+CISCO-SMI::ciscoMgmt.48.1.1.1.2.14 = STRING: "lsmpi_io"
+
+snmpget -v 2c -c community yourhostip 1.3.6.1.4.1.9.9.48.1.1.1.5.14
+CISCO-SMI::ciscoMgmt.48.1.1.1.5.14 = Gauge32: 6294116
+
+snmpget -v 2c -c community yourhostip 1.3.6.1.4.1.9.9.48.1.1.1.6.14
+CISCO-SMI::ciscoMgmt.48.1.1.1.6.14 = Gauge32: 972
+</code></pre>
+<h4>Notes</h4>
+<p>This is the way to walk and drill down into any SNMP data set.  Using<br>
+MIB&#39;s is much easier but if you know what the OID&#39;s correspond to not<br>
+necessary.</p>
+
+<p>If you are using this to walk the interface index and get statistics it<br>
+is important to be aware of <a href="http://www.cisco.com/en/US/tech/tk648/tk362/technologies_tech_note09186a0080134eec.shtml">ifindex persist</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

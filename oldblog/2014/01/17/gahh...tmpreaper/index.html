@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>gahh...tmpreaper &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>gahh...tmpreaper</h1>
+            <h2>Friday, January 17, 2014 <span>&raquo;</span> <a href="/tags/find/">find</a>, <a href="/tags/linux/">linux</a>, <a href="/tags/tmp/">tmp</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>I am seeing the same issue as this <a href="https://lists.debian.org/debian-user/2005/06/msg00799.html">gentlemen</a> when trying to use <a href="http://manpages.ubuntu.com/manpages/hardy/man8/tmpreaper.8.html">tmpreaper</a>.</p>
+
+<p>If you use the &ndash;test switch you can see the internals of how tmpreaper recognizes files and it is without the container directory context so it doesn&#39;t read &#39;/hi/hello&#39; with &#39;/hi*&#39; if you use &ndash;protect.  It only sees the hello file individually.  This is not the behavior I need at the moment.  I do not know the name of each file I need to protect.  Some things like passenger use (and maybe abuse) &#39;/tmp&#39; extensively.</p>
+
+<p>Example of files passenger can land in /tmp:</p>
+
+<pre><code>
+/tmp/passenger.1.0/
+`-- generation-1
+    |-- backends
+    |   |-- ruby.3X77Nbh9Ie2tsn7AcReQJh9Aq9gqSK3MF0afBS5qYgJDNxcTMblyrxW
+    |-- buffered_uploads
+    |-- config_files.txt
+    |-- helper_server.pid
+    |-- logging.socket
+    |-- passenger-status-password.txt
+    |-- socket
+    |-- structure_version.txt
+    `-- web_server.txt
+</code></pre>
+<h4>Using &#39;find&#39;</h4>
+<p>The goal is to remove files and directories left in &#39;/tmp&#39; and not touched within the last hour.  Cleaning &#39;/tmp&#39; is one of those problems that is so common there are solutions all over the Internet.  This seems to be a version of the sanest approach.</p>
+
+<pre><code>
+#path to find files in /tmp (uses shell globbing) and have the full path
+#files only and not modified in last hour (-60 would find only files that were modified)
+/usr/bin/find /tmp/* -mmin +60 -type f | \
+    #breaking args on newlines to account for spaces in file names
+    #-r for xargs does not attempt to run the following command
+    #if the array is empty
+    xargs -d '\n' -r rm -v
+</code></pre>
+
+<p>The whole idea is to be able to protect (as in not remove) a file by path in a sane way.</p>
+
+<p>If I exclude &#39;/tmp/yo&#39; I want the option to match &#39;/tmp/yo/foo&#39; and &#39;/tmp/yo/bar&#39;.  This kind of flexibility implies regex. </p>
+
+<pre><code>
+/usr/bin/find /tmp/* -mmin +60 -type f | \
+    #Regex for exclusions \
+    grep -v -E ^/tmp/yo | \
+    xargs -d '\n' -r rm -v
+</code></pre>
+
+<p>I can also use lines in a file to group.</p>
+
+<p>mystuff.exclusions</p>
+
+<pre><code>
+    ^/tmp/yo
+    ^/tmp/passenger
+</code></pre>
+
+<p>Find command reading in regex cleanup exclusions from a file:</p>
+
+<pre><code>
+/usr/bin/find /tmp/* -mmin +60 -type f | \
+    #read in from a file natively
+    grep -v -E -f mystuff.exclusions | \
+    xargs -d '\n' -r rm -v
+</code></pre>
+<h4>Getting those left over directories</h4>
+<p>Now remove the remaining empty directories.</p>
+
+<pre><code>
+#once again using globbing to get full file paths
+#dirs not updated in 60 minutes and empty
+#we are also using rmdir which will not remove a dir that isn't empty
+#by the time we get to it.  Removing a nasty race condition if you use
+#'rm -R'.  '--ignore-fail-on-non-empty' swallows the error that occurs in
+#that situation.
+/usr/bin/find /tmp/*  -mmin +60 -type d -empty | \
+    xargs -d '\n' -r rmdir --ignore-fail-on-non-empty
+</code></pre>
+<h4>Final Version</h4>
+<p>My exclusions file with one regex per line:</p>
+
+<p>mystuff.exclusions<br>
+<pre><code><br>
+    ^/tmp/yo<br>
+    ^/tmp/passenger<br>
+</code></pre></p>
+
+<pre><code>
+#!/bin/bash
+#file cleanup
+#I am using head to keep the limit of files artificially down that we 
+#try to remove.  However, xargs should do the 'right thing' if given large lists.
+/usr/bin/find /tmp/* -mmin +60 -type f | \
+    grep -v -E -f mystuff.exclusions | \
+    head -n 1000 | \
+    xargs -d '\n' -r rm -v
+
+#dir cleanup
+/usr/bin/find /tmp/* -mmin +60 -type d -empty | \
+    xargs -d '\n' -r rmdir --ignore-fail-on-non-empty
+</code></pre>
+
+<p>Place in file and run this hourly:</p>
+<pre><code>0 * * * * &#47;usr&#47;local&#47;bin&#47;myscript.sh &gt;&#47;dev&#47;null 2&gt;&amp;1
+</code></pre><h4>Notes</h4>
+<p>Much as been said about the harm of xargs.  I tried this originally using the -print0 option in find, and the -0 option for xargs to appropriately handle files with space in them.  I wasn&#39;t able to wrangle that in a way that made sense with my exclusion logic.  I really wanted to read in my list of exclusions from a file for use-case specific reasons.  With xargs it seems, don&#39;t use it until you need to use it is the best advice.</p>
+
+<p>There is a <a href="https://code.google.com/p/phusion-passenger/issues/detail?id=365">way</a> to tell Passenger not to use /tmp.  It would probably be a good idea no matter what.</p>
+<h4>Reference</h4>
+<p><a href="https://www.phusionpassenger.com/">passenger</a><br>
+<a href="http://manpages.ubuntu.com/manpages/hardy/man8/tmpreaper.8.html">tmpreaper</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

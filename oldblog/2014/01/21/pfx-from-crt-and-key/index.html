@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>pfx from crt and key and into your ASA &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>pfx from crt and key and into your ASA</h1>
+            <h2>Tuesday, January 21, 2014 <span>&raquo;</span> <a href="/tags/asa/">asa</a>, <a href="/tags/pfx/">pfx</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Some devices that use certificates require them to be uploaded in pfx format.</p>
+
+<p>What is pfx?</p>
+
+<pre><code>
+    In cryptography, PKCS #12 defines an archive file format \
+    for storing many cryptography objects as a single file. \
+    It is commonly used to bundle a private key with its X.509 \
+    certificate or to bundle all the members of a chain of trust. \
+    A PKCS #12 file may be encrypted and signed.
+</code></pre>
+
+<p>Typically, when you generate an SSL certificate you get a mine.key file and a mine.crt file</p>
+
+<p>PFX format is used by Cisco ASA devices</p>
+<h4>Installing OpenSSL</h4><pre><code>aptitude install openssl
+</code></pre><h4>Make sure your .key file is valid</h4><pre><code>openssl x509 -text -in myfile.key
+</code></pre><h5>Making a PFX file</h5>
+<pre><code>
+openssl pkcs12 \                 
+        -export \                #We are exporting!
+        -out myfile.pfx \        #Your intended .pfx
+        -inkey myfile.key \      #Your file.key
+        -in myfile.crt \         #Your file.crt
+        -certfile digicertca.crt #Your CA certificate
+</code></pre>
+<h5>Adding your .pfx to your ASA</h5>
+<p>I am using ASDM for this as it&#39;s far easier.  This is one of the few things I think the GUI has right.  My device management.</p>
+
+<p>Manage your identitfy certs<br>
+<img src="/assets/images/pfx/my-device-cert-management.png" alt="cert1" title="cert1"></p>
+
+<p>Add a new one<br>
+<img src="/assets/images/pfx/my-device-add-cert.png" alt="cert2" title="cert2"></p>
+
+<p>Browse to your pfx (note: the pfx must have a passphrase)<br>
+<img src="/assets/images/pfx/my-device-cert-upload.png" alt="cert3" title="cert3"></p>
+
+<p>Now go to the SSL Settings section<br>
+<img src="/assets/images/pfx/my-device-cert-to-int.png" alt="cert4" title="cert4"></p>
+
+<p>Select and interface and edit.  Choose your new pfx.<br>
+<img src="/assets/images/pfx/my-device-interface-pick.png" alt="cert5" title="cert5"></p>
+<h4>Notes</h4>
+<p><a href="http://www.cisco.com/en/US/products/ps6120/">Cisco ASA</a><br>
+<a href="http://en.wikipedia.org/wiki/PKCS_12">PFX</a><br>
+<a href="http://www.openssl.org/">OpenSSL</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

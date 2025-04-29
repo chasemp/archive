@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>puppetmaster_3 on debian &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>puppetmaster_3 on debian</h1>
+            <h2>Thursday, June 27, 2013 <span>&raquo;</span> <a href="/tags/debian/">debian</a>, <a href="/tags/puppet/">puppet</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Getting puppetmaster 3.0 on Debian (still squeeze)</p>
+
+<p>I am trying to test and I keep seeing:</p>
+<pre><code>Syntax error at &#39;(&#39;; expected &#39;)&#39; at &#47;repo&#47;modules&#47;apache&#47;manifests&#47;module.pp:34 on node test
+</code></pre>
+<p>I have seen this before and I know it is a result of manifests written for &gt;3.0, at least for this</p>
+
+<p>specific issue.  That error is rather generic in general.</p>
+<h4>Can I use backports?</h4><pre><code>aptitude update
+aptitude -t squeeze-backports install puppetmaster
+
+--&gt; puppet: Depends: puppet-common (= 2.6.2-5+squeeze6) but 2.6.2-5+squeeze8 is to be installed.
+</code></pre>
+<p>No, backports is still pretty old.</p>
+<h4>Using the Official Repo</h4>
+<p>Luckily, PuppetEnterprises publishes a deb for adding their repo.  Similar to what rpmforge does for any<br>
+CentOS folks.</p>
+<pre><code>wget http:&#47;&#47;apt.puppetlabs.com&#47;puppetlabs-release-sqeeze.deb
+</code></pre>
+<p>&ndash;&gt; 2013-06-27 16:11:21 (159 MB/s) - “puppetlabs-release-squeeze.deb” saved [3440/3440]</p>
+<pre><code>dpkg -i puppetlabs-release-squeeze.deb 
+cat &#47;etc&#47;apt&#47;sources.list.d&#47;puppetlabs.list
+</code></pre>
+<pre><code>
+# Puppetlabs products
+deb http://apt.puppetlabs.com squeeze main
+deb-src http://apt.puppetlabs.com squeeze main
+
+# Puppetlabs dependencies
+deb http://apt.puppetlabs.com squeeze dependencies
+deb-src http://apt.puppetlabs.com squeeze dependencies
+
+# Puppetlabs devel (uncomment to activate)
+# deb http://apt.puppetlabs.com squeeze devel
+# deb-src http://apt.puppetlabs.com squeeze devel
+</code></pre>
+<pre><code>sudo aptitude update
+apt-cache show puppetmaster
+
+--&gt; Package: puppetmaster
+--&gt; Version: 2.6.2-5+squeeze6
+
+
+aptitude install puppetmaster
+
+--&gt; Package: puppetmaster
+--&gt; ...
+--&gt; Version: 3.2.2-1puppetlabs1
+</code></pre>
+<p>Reference:<br>
+<a href="http://unix.stackexchange.com/questions/39261/how-to-see-package-version-without-install">view available packages</a><br>
+<a href="http://docs.puppetlabs.com/guides/puppetlabs####%20package####%20repositories.html">puppet repo</a><br>
+<a href="http://packages.debian.org/search?keywords=puppetmaster&amp;searchon=names&amp;section=all&amp;suite=squeeze-backports">backports search</a><br>
+<a href="http://backports.debian.org/Instructions/">backports howto</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

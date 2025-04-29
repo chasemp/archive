@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>apache top &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>apache top</h1>
+            <h2>Friday, October 09, 2015 <span>&raquo;</span> <a href="/tags/apache/">apache</a>, <a href="/tags/linux/">linux</a>, <a href="/tags/top/">top</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>There are a few different approaches to getting &#39;top&#39; style insight into Apache2.x</p>
+<h4>Debian/Ubuntu &#39;apachetop&#39; (0.12.6-16)</h4>
+<p><a href="https://github.com/nexcess/apachetop">https://github.com/nexcess/apachetop</a> (This is a fork)</p>
+
+<p>This is the version packaged natively for Debian.</p>
+
+<p>Assumes a common/combined access log file format:</p>
+<pre><code>apachetop -f &#47;var&#47;log&#47;apache&#47;access.log
+</code></pre>
+<pre><code>
+last hit: 19:37:04         atop runtime:  0 days, 00:01:15             19:37:05
+All:          429 reqs (   5.8/sec)       4742.7K (   64.1K/sec)      11.1K/req
+2xx:     228 (53.1%) 3xx:      57 (13.3%) 4xx:     0 ( 0.0%) 5xx:   144 (33.6%)
+R ( 30s):     194 reqs (   6.5/sec)       2514.0K (   83.8K/sec)      13.0K/req
+2xx:      95 (49.0%) 3xx:      35 (18.0%) 4xx:     0 ( 0.0%) 5xx:    64 (33.0%)
+
+ REQS REQ/S    KB KB/S URL
+   72  2.40 873.6 29.1*/robots.txt
+   28  0.93  12.3  0.4 /foo/bar
+    2  0.18   1.7  0.2 /login/refresh/
+</code></pre>
+
+<p>You can specify how many Hits (-H) or second (-T) to remember stats across (mutually exclusive).</p>
+
+<p>Pros:<br>
+- Fast<br>
+- Easily available<br>
+- Minimum dependency<br>
+- Forked on github</p>
+
+<p>Cons:<br>
+- Missing insights that a mod_status solution has access to<br>
+- I can&#39;t get it to process the error.log<br>
+- Stricly ncurses<br>
+- Original seems dead <a href="http://www.webta.org/projects/apachetop/">http://www.webta.org/projects/apachetop/</a></p>
+<h4>Apache-top</h4>
+<p><a href="https://github.com/fr3nd/apache-top/blob/master/apache-top.py">https://github.com/fr3nd/apache-top/blob/master/apache-top.py</a></p>
+<pre><code>apache-top -u http:&#47;&#47;127.0.0.1&#47;server-status
+</code></pre>
+<pre><code>
+Parent Server Config. Generation: 3,
+Current Time: Friday, 09-Oct-2015 19:53:25 UTC
+Server uptime:  1 day 18 hours 36 minutes 29 seconds
+Server load: 2.62 2.77 2.77, Active/Idle: Total/Traffic:
+___._._....__..._.....W__.__..._.__..__.K_..._W_.___.._.
+........................................................
+........................................................
+PID   M SS     CPU  VHost           IP              Request
+37059 K 1   338.81  myhost.com10.1.1.1    GET /foo HTTP/1.1
+5537  K 0   142.38  myhost.com10.1.1.2    GET /bar/ HTTP/1.1
+</code></pre>
+
+<p>You can sort the live output by a few criteria:</p>
+<pre><code>P   Sort by PID
+C   Sort by CPU usage
+S   Sort by Seconds since beginning of most recent request
+V   Sort by VirtualHost
+M   Sort by Mopde of operation
+R   Sort by Request
+I   Sort by Ip
+</code></pre>
+<p>Pros:<br>
+- Python<br>
+- Easily available-ish<br>
+- Minimum dependency</p>
+
+<p>Cons:<br>
+- Requires mod_status<br>
+- Stricly ncurses</p>
+
+<p><a href="http://fr3nd.net/projects/apache-top/">apache-top</a></p>
+<h4>apachetop.py (without ncurses)</h4>
+<p><a href="https://github.com/gwillem/apachetop">https://github.com/gwillem/apachetop</a></p>
+
+<p>I like this tool a lot and I am currently working off a small <a href="https://github.com/gwillem/apachetop/pull/1">fork</a> but<br>
+I have intiated a <a href="https://github.com/gwillem/apachetop/pull/1">Pull Request</a> for my small changes.</p>
+
+<p>Show all non-idle workers (default output):</p>
+
+<pre><code>
+pid  21019 sec 1 state W client 10.1.1.1 host mysite.com:80 uri GET /bar HTTP/1.1
+pid   5774 sec 0 state K client 10.1.1.2 host mysite.com:80 uri GET /foo
+</code></pre>
+
+<p>There are a number of cool and useful examples in the <a href="https://github.com/gwillem/apachetop/blob/master/README.md">Readme</a></p>
+
+<p>Repurposed the apache status parsing from apache-top.py.<br><br>
+<a href="https://github.com/gwillem/apachetop">cli apachetop</a></p>
+
+<p>Pros:<br>
+- Python<br>
+- Easily available-ish<br>
+- Minimum dependency<br>
+- <a href="https://en.wikipedia.org/wiki/Unix_philosophy">Unix Philosophy</a></p>
+
+<p>Cons:<br>
+- Requires mod_status<br>
+- Requires &#39;watch&#39; for live updating</p>
+<h4>atop</h4>
+<p><a href="https://raw.githubusercontent.com/chnm/atop/master/atop">https://raw.githubusercontent.com/chnm/atop/master/atop</a></p>
+
+<p>&#39;links -dump <a href="http://127.0.0.1/server-status">http://127.0.0.1/server-status</a>&#39; succeeds manually but atop had issues</p>
+
+<p>Pros:<br>
+- Bash<br>
+- Easily available-ish<br>
+- Minimum dependency</p>
+
+<p>Cons:<br>
+- Didn&#39;t actually work<br>
+- Requires mod_status<br>
+- Bash ;)</p>
+
+<p><a href="http://mossiso.com/2014/04/02/atop-apache-top-for-keeping-tabs-on-the-web-servers.html">atop for web servers</a></p>
+<h4>Reference</h4>
+<p><a href="http://httpd.apache.org/docs/2.4/mod/mod_status.html">mod_status</a><br>
+<a href="http://www.cyberciti.biz/faq/apache-server-status/">nixcraft mod_status</a><br>
+<a href="https://github.com/chnm/atop">atop</a><br>
+<a href="https://packages.debian.org/jessie/admin/apachetop">debian apachetop package</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

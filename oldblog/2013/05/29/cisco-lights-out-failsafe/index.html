@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>cisco lights out failsafe &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>cisco lights out failsafe</h1>
+            <h2>Wednesday, May 29, 2013 <span>&raquo;</span> <a href="/tags/cisco/">cisco</a>, <a href="/tags/ios/">ios</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>If you are remote and are at risk of locking yourself out.  For Cisco or IOS based devices your best bet is to schedule a reload at the beginning of your maintenance.  This mitigates the possible outage.  Better 30 minutes than 30 hours, if you are using JunOS they have some nice &ldquo;fail back to my previous config&rdquo;, and Cisco now in some cases provides the archive rollback feature.  Which is awesome.  But it may not be available or if for any reason the more straightfoward and heavy-handed approached is necessary it is there.  Yes, this will obviously cause an outage, but in a true &#39;lights out&#39; remote scenario this may be the best you can do.</p>
+
+<p><strong>EDIT</strong> </p>
+
+<p>Updated preamble to reference rollback option.</p>
+
+<p>So&hellip;if it suits your needs use <a href="http://packetpushers.net/cisco-configuration-archive-rollback-using-revert-instead-of-reload/">archive</a> <a href="http://packetpushers.net/cisco-configuration-archive-rollback-using-revert-instead-of-reload/">rollback</a></p>
+<h4>Walk through:</h4>
+<p><strong><em>It&#39;s 2 AM and I&#39;m up for maintenace</em></strong></p>
+<pre><code>myrtr#reload in 30
+System configuration has been modified. Save? [yes&#47;no]: no
+Reload scheduled for 13:20:23 PDT Wed May 29 2013 (in 30 minutes) by &lt;me&gt; on vty0 (&lt;vty_ip&gt;)
+Reload reason: Reload Command
+Proceed with reload? [confirm]
+myrtr#
+</code></pre>
+<p>*** Making changes *** </p>
+
+<p>*** How long until a reset? ***</p>
+<pre><code>myrtr#show reload
+Reload scheduled for 13:20:24 PDT Wed May 29 2013 (in 12 minutes) by &lt;me&gt; on vty0 (&lt;vty_ip&gt;)
+Reload reason: Reload Command
+</code></pre>
+<p>*** test everything is good &ndash; ok clear scheduled reload ***</p>
+<pre><code>myrtr#reload cancel
+***
+*** --- SHUTDOWN ABORTED ---
+***
+</code></pre><h4>Reference</h4>
+<p><a href="http://www.cisco.com/en/US/docs/ios/fundamentals/configuration/guide/cf_config-rollback.html">replace and rollback</a><br>
+<a href="http://www.cisco.com/en/US/docs/ios-xml/ios/config-mgmt/configuration/xe-3s/asr1000/cm-config-rollback.html">ios-xe replace and rollback</a><br>
+<a href="http://www.techrepublic.com/blog/data-center/use-the-cisco-ios-archive-command-to-archive-your-routers-configuration/">archive intro</a><br>
+<a href="http://packetpushers.net/cisco-configuration-archive-rollback-using-revert-instead-of-reload/">rollback example</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>specialty packet capture tools &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>specialty packet capture tools</h1>
+            <h2>Friday, October 09, 2015 <span>&raquo;</span> <a href="/tags/apache/">apache</a>, <a href="/tags/linux/">linux</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Situations where it&#39;s useful to analyze traffic:</p>
+
+<ul>
+<li>Don&#39;t have access to the logs</li>
+<li>Want to look at traffic somewhere upstream like an LB</li>
+<li>Something is making logs ineffectual</li>
+<li>Other</li>
+</ul>
+
+<p>Pretty much all roads point to packet sniffing.</p>
+<h4>HTTPRY</h4>
+<p>An efficient packet sniffer aimed at HTTP</p>
+
+<p>No args output (as oneline but broken down for explanation):</p>
+
+<pre><code>
+    2015-10-09 17:46:48         - timestamp
+    10.0.0.1    10.0.0.2        - source-ip/dest-ip or vice versa (depending on arrow)
+    >                   - direction of traffic
+    GET                 - http method
+    foo.com             - http host
+    /myuri              - the URI in question
+    HTTP/1.1                - HTTP version
+    -                   - status code
+    -                   - reason
+</code></pre>
+
+<p>The output fields are configurable.  Say you only serve one site on a box so the host<br>
+field never changes and the objective is to narrow down a few suspect URI&#39;s.</p>
+
+<p>httpry -f timestamp,source-ip,direction,request-uri</p>
+<pre><code>2015-10-09     18:10:43 10.0.0.1    &gt;   &#47;myuri
+</code></pre>
+<p>Since httpry outputs text I can do things like:</p>
+<pre><code>httpry -f timestamp,source-ip,request-uri | egrep -i &#39;\&#47;myuri\&#47;[0-9]&#39;{6}
+</code></pre>
+<p>Other than text munging there are a few native mechanisms for targeting:</p>
+
+<p>tcpdump style filters</p>
+<pre><code>httpry &#39;host 74.1.1.1 and port 8080&#39;
+</code></pre>
+<p>specifying an HTTP method for collection (along with ability to read/write Pcap)</p>
+<pre><code>httpry -m GET,POST
+</code></pre>
+<p>There is also a native statistics mode in &#39;httpry -s&#39; that by provides meta stats.</p>
+<pre><code>2015-10-09 19:20:48 one.myhost.org     147 rps
+2015-10-09 19:20:48 two.myhost.org     2 rps
+2015-10-09 19:20:48 three.myhost.org   9 rps
+2015-10-09 19:20:48 totals  156.46 rps
+</code></pre>
+<p>Show me data aggregated in 30s buckets with a minimum treshold of 10/rps</p>
+<pre><code>httpry -s -l 10 -t 30 
+</code></pre>
+<p>httpry has the ability to run as a daemon natively as well.</p>
+<h4>ngrep</h4>
+<p>Payload aware network search tool with grep and tcpdump like magic</p>
+<pre><code>ngrep port 80 -W single
+
+T 10.0.0.1:80 -&gt; 10.0.0.2:65227 [AP] HTTP&#47;1.1 200 OK..\
+Date: Fri, 09 Oct 2015 21:45:16 GMT..\
+Server: Apache..Strict-Transport-Security: max-age=31536000..\
+X-Powered-By: PHP&#47;5.5.9-1ubuntu4.13..X-Frame-Options: Deny..\
+Cache-Control: private, no-cache, no-store, must-revalidate..
+Pragma: no-cache..\
+X-Content-Type-Options: nosniff..\
+Content-Length: 49..Connection: close..Content-Type: application&#47;json....\
+{&quot;result&quot;:[],&quot;error_code&quot;:null,&quot;error_info&quot;:null}
+</code></pre>
+<p>So what if we are behind a reverse proxy and the header source IP address is only<br>
+part of the story.  Most likely we want to analyze the X-Forwarded-For field.</p>
+
+<p>Sample our web traffic honoring embedded linefeeds (newline) looking for X-forwarded-for<br>
+header fields, extracting the initial IP value, and showing the top 10 IP&#39;s.</p>
+<pre><code>ngrep -n 1000 port 80 -W byline | \
+grep -i x-forwarded-for | \
+awk &#39;{print $2}&#39; | \
+cut -d &#39;,&#39; -f 1 | sort | uniq -c | sort -n | tail -n 10
+</code></pre>
+<p>Watching for mail the hard way: &#39;ngrep &#39;vacation&#39; port 25&#39;</p>
+<pre><code>T 2620::62748 -&gt; 2620::76:25 [A]
+Return-Path: no-reply@mail.org..To: foo@mail.org..From: dude &lt;no-reply
+@dude.org&gt;..Reply-to: noway@mail.org..Subject: foo asked for vacation
+</code></pre>
+<p>ngrep is extremely powerful but is vulnerable to packet fragmentation.</p>
+<h4>netsniff-ng</h4>
+<p>A super efficient packet capture tool that is Pcap independent</p>
+<pre><code>&#47;usr&#47;sbin&#47;netsniff-ng
+</code></pre>
+<pre><code>
+< 3 66 1444429202.367551
+ [ Eth MAC (84:78:ac:5a:19:41 => f2:3c:91:6e:f6:f5), Proto (0x0800, IPv4) ]
+ [ Vendor (Unknown => Unknown) ]
+ [ IPv4 Addr (99.x.x.x => 74.x.x.x), Proto (6), TTL (53), TOS (0), Ver (4),
+   IHL (5), Tlen (52), ID (48089), Res (0), NoFrag (1), MoreFrag (0), FragOff (0), CS
+   um (0x0daf) is ok ]
+ [ TCP Port (62403 => 22 (ssh)), SN (0xbb019f19), AN (0xf7b8096d), DataOff (8
+   ), Res (0), Flags (ACK ), Window (8189), CSum (0x33aa), UrgPtr (0) ]
+ [ chr ....T...M..O ]
+ [ hex  01 01 08 0a 54 d4 be f7 4d a3 f6 4f ]
+</code></pre>
+
+<p>netsniff-ng is interesting for a few reasons:</p>
+
+<ul>
+<li>It uses a zero-copy mechanism for packet capture (libpcap &gt;1.0 does now too)</li>
+<li>It doesn&#39;t need libpcap</li>
+<li>It can write to libpcap format really efficiently</li>
+</ul>
+<h4>Reference</h4>
+<p><a href="http://dumpsterventures.com/jason/httpry/">httpry main</a><br>
+<a href="https://isc.sans.edu/forums/diary/Web+Traffic+Analysis+with+httpry/9295/">httpry 1</a><br>
+<a href="http://manpages.ubuntu.com/manpages/utopic/man1/httpry.1.html">httpry man</a><br>
+<a href="http://taosecurity.blogspot.com/2008/06/logging-web-traffic-with-httpry.html">tao security httpry</a><br>
+<a href="http://blog.mosinu.com/?p=239">tcpdump tips</a><br>
+<a href="http://ngrep.sourceforge.net/">ngrep sourceforge</a><br>
+<a href="http://www.stearns.org/doc/ngrep-intro.current.html">ngrep intro</a><br>
+<a href="https://github.com/netsniff-ng/netsniff-ng">netsniff-ng gh</a><br>
+<a href="https://en.wikipedia.org/wiki/Netsniff-ng">netsniff-ng wp</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

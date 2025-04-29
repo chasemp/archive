@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>selecting a subset for sampling &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>selecting a subset for sampling</h1>
+            <h2>Friday, September 13, 2013 <span>&raquo;</span> <a href="/tags/modulus/">modulus</a>, <a href="/tags/php/">php</a>, <a href="/tags/sample/">sample</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>In the devops world there are a lot of reasons to want good stats, but sometimes the load for collecting those stats on every execution of a script or web page is too invasive.  <a href="http://en.wikipedia.org/wiki/A/B_testing">A/B testing</a> is another place where we want to select a certain portion of served pages and take appropriate action.  The straight forward way to select a subset is a state based system.  For every page that executes you can add an id to a set in redis.  If you are looking for 5% of pages then look to see if the item count is 20.  If you are number 20 you can flush the list and the count starts over.  This is not meant for real world usage but that is the basic idea behind selecting a portion of pages by keeping state between all executions.</p>
+
+<p>If the state based system is too slow, clunky, unreliable or inelegant there has to be an alternative.</p>
+<h4>Modulo Operation</h4>
+<p>The <a href="http://en.wikipedia.org/wiki/Modulo_operation">modulo operation</a> finds the remainder of one number divided by another.</p>
+
+<p>Example of Modulo operations:</p>
+
+<pre><code>
+>>> 1 % 1
+0
+>>> 2 % 1
+0
+>>> 5 % 2
+1
+>>> 9 / 4
+2
+</code></pre>
+
+<p>So you take all the numbers 1 - 100 the percentage of modulus operations with a remainder of 0 for the number 10 is 10%.</p>
+<h4>Combining stateful tracking of executions and modulus</h4>
+<p>If you want to you can combine these two ideas.  In order to sample 5% of executions you could track the execution order of your scripts in redis (or somwhere) looking for a modulus operation remainder of 0 each time to identify an appropriate sample page.  Exectuions 1 - 19 will not be sampled, but 20 will.  So will 40, 60, 80, and 100.  When script 101 queries to see where in the order it is it will be told it is 1 and the cycle starts over.  This way each job would have a 5% chance of being selected as a sample.</p>
+
+<p>This is not any more advantages than the simply having every page know when it&#39;s number 20.</p>
+<h4>Using the law of averages to provide a quick sample determination</h4>
+<p>Let&#39;s say we have a simple query and we want 10% to send a stat to statsd.  The pseudo code might look like</p>
+<h1>python-ish pseudo code</h1>
+<pre><code>
+import random
+sample_interval = 20
+start_time = time.time()
+user_id = execute_mysql_query('select %s from users' % username)
+total_time = time.time() - start_time
+print user_id
+if random.randint(0, 100) % sample_interal == 0:
+    submit_to_statsd('time.to.query.userid', total_time)
+</code></pre>
+
+<p>Over time this should submit a sample of 5% of all user_id queries to statsd.  The first 100 you may get 0, 5, or 8 but with a larger sample you get around 5% and it is much cheaper than trying to have each execution determine where it is in the pecking order for stats submission.</p>
+<h4>Just how accurate is the law of averages here?</h4>
+<p>Here is a snippet to figure out the percentage of matches in a spread for a particular modulus integer.  Ideally using the operation &#39;int % 10 == 0&#39; will have a sample rate of 10 percent.  The user passes in the top end of the range, we cycle through 10 times.  The number of matches in each pass is summed and then used to calculate in the average match percentage across all tries.</p>
+
+<pre><code>
+import sys
+import random
+try_match = []
+tries = 10
+#make 10 passes of user defined range
+while tries > 0:
+    match = []
+    #how many times should I try to match my modulus op
+    for i in range(0, int(sys.argv[1])):
+        if random.randint(0, 100) % 10 == 0:
+            match.append(i)
+
+    #append the number of matches
+    try_match.append(len(match))
+    tries -= 1
+
+average_sampled = sum(try_match) / 10
+print average_sampled * 100 / int(sys.argv[1]) 
+</code></pre>
+
+<p>Looks like (actual runs)</p>
+
+<pre><code>
+me@vm:~/php# python modulo.py 10
+10
+me@vm:~/php# python modulo.py 100
+11
+me@vm:~/php# python modulo.py 1000
+10
+me@vm:~/php# python modulo.py 10000
+10
+me@vm:~/php# python modulo.py 100000
+10
+me@vm:~/php# python modulo.py 1000000
+10
+me@vm:~/php# python modulo.py 10000000
+10
+me@vm:~/php# python modulo.py 100000000
+10
+</code></pre>
+
+<p>This is almost too perfect but the idea is this the accuracy of percentage sampled gets better over the long run.  In <br>
+reality if you run this 10 times it won&#39;t be 10% all of the time, but if you run it against 1000 it will be most of the <br>
+time.</p>
+
+<p>Testing against a small range is wildly variable:</p>
+
+<pre><code>
+me@vm:~/php# python modulo.py 10
+10
+me@vm:~/php# python modulo.py 10
+10
+me@vm:~/php# python modulo.py 10
+10
+me@vm:~/php# python modulo.py 10
+10
+me@vm:~/php# python modulo.py 10
+0
+me@vm:~/php# python modulo.py 10
+0
+me@vm:~/php# python modulo.py 10
+10
+</code></pre>
+
+<p>Testing against a large range is nicely consistent:</p>
+
+<pre><code>
+me@vm:~/php# python modulo.py 1000
+10
+me@vm:~/php# python modulo.py 1000
+11
+me@vm:~/php# python modulo.py 1000
+10
+me@vm:~/php# python modulo.py 1000
+11
+me@vm:~/php# python modulo.py 1000
+10
+me@vm:~/php# python modulo.py 1000
+10
+</code></pre>
+<h4>Using this to match 10% of PHP pages</h4>
+<p>I am going to use the following code to test this principle for PHP.</p>
+
+<pre><code>
+$sample_rate = 10;
+$total_tries = $argv[1];
+$matches = array();
+$nonmatches = array();
+echo "$total_tries \n";
+foreach (range(1, $total_tries) as $number) {
+
+    $random_number = rand();
+
+    if ($random_number % $sample_rate === 0) {
+        $matches[] = $random_number;
+        // if this were a real page you would submit your stat here
+        // since it matches your sample rate
+    }
+    else {
+        $nonmatches[] = $random_number;
+    }
+}
+
+$matchcount = count($matches);
+$nonmatchcount = count($nonmatches);
+print "matches: $matchcount\n";
+print "nonmatches: $nonmatchcount\n";
+$dive = $matchcount * 100;
+$prc = $dive / $total_tries;
+echo "$prc" . "\n"
+</code></pre>
+
+<p>Looks Like</p>
+
+<pre><code>
+me@vm:~/php# php modtest.php 10  
+10 
+matches: 0
+nonmatches: 10
+0
+
+me@vm:~/php# php modtest.php 100
+100 
+matches: 9
+nonmatches: 91
+9
+
+me@vm:~/php# php modtest.php 1000
+1000 
+matches: 104
+nonmatches: 896
+10.4
+
+me@vm:~/php# php modtest.php 10000
+10000 
+matches: 971
+nonmatches: 9029
+9.71
+
+me@vm:~/php# php modtest.php 100000
+100000 
+matches: 10114
+nonmatches: 89886
+10.114
+
+me@vm:~/php# php modtest.php 1000000
+1000000 
+matches: 99407
+nonmatches: 900593
+9.9407
+
+me@vm:~/php# php modtest.php 1000000 
+1000000 
+matches: 99716
+nonmatches: 900284
+9.9716
+
+me@vm:~/php# php modtest.php 10000000
+10000000 
+matches: 1001427
+nonmatches: 8998573
+10.01427
+</code></pre>
+<h4>Reference</h4>
+<p><a href="http://stackoverflow.com/questions/5555712/generate-a-random-number-in-python">random numbers in python</a><br>
+<a href="http://docs.python.org/2/library/random.html">py random doc</a><br>
+<a href="http://en.wikipedia.org/wiki/Law_of_averages">loa</a><br>
+<a href="http://en.wikipedia.org/wiki/Modulus">module wiki</a><br>
+<a href="https://github.com/chasemp/archive/tree/master/modtest">on gh</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>fabric basics &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>fabric basics</h1>
+            <h2>Thursday, September 26, 2013 <span>&raquo;</span> <a href="/tags/fabric/">fabric</a>, <a href="/tags/python/">python</a>, <a href="/tags/ssh/">ssh</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Fabric is a framework for environment automation.  Often it is used for code deployments but that is only a possibility and not a limitation.</p>
+<h4>Writing a Fabric function</h4>
+<p>Fabric uses the python path to look for something to import called &#39;fabfile&#39;.  This can be a fabfile.py file<br>
+in your current directory or a fabfile/<strong>init</strong>.py module somewhere in the python path.  </p>
+
+<p>Python Path On a Python2.7 System:</p>
+
+<pre><code>
+>>> import sys; print sys.path
+['', '/usr/lib/python2.7', '/usr/lib/python2.7/plat-linux2',
+     '/usr/lib/python2.7/lib-tk', '/usr/lib/python2.7/lib-old',
+     '/usr/lib/python2.7/lib-dynload', '/usr/local/lib/python2.7/dist-packages',
+     '/usr/lib/python2.7/dist-packages', '/usr/lib/pymodules/python2.7']
+</code></pre>
+<h4>Fabric &#39;Hello World!&#39;</h4>
+<p>Create a fabfile.py in your current directory and add this hello() function.</p>
+
+<pre><code>
+├── fabfile.py
+
+    def hello():
+        print("Hello World!")
+</code></pre>
+
+<p>List the available fabric commands using the &#39;fab&#39; utility:</p>
+<pre><code>root@vm:~&#47;fabric# fab -l
+Available commands:
+
+    hello
+</code></pre>
+<p>Execute the &#39;hello&#39; function.</p>
+<pre><code>root@vm:~&#47;fabric# fab hello
+Hello World!
+
+Done.
+</code></pre><h4>Fabric and run local commands</h4>
+<p>Add the following to fabfile.py</p>
+<pre><code>from fabric.api import local
+def localetcissue():
+    print local(&#39;cat &#47;etc&#47;issue&#39;)
+</code></pre>
+<p>Execute your command:</p>
+<pre><code>root@vm:~&#47;fabric# fab localetcissue
+[localhost] run: cat &#47;etc&#47;issue
+Debian GNU&#47;Linux 7.1 \n \l
+
+Done.
+</code></pre><h4>Fabric can run remote commands</h4>
+<p>This is assuming you have ssh key based authentication setup.  If not then try out these <a href="https://help.github.com/articles/generating-ssh-keys">instructions</a>.</p>
+
+<p>Add the following to fabfile.py</p>
+<pre><code>from fabric.api import run
+def whoami():
+    print run(&#39;whoami&#39;)
+</code></pre>
+<p>Execute your command:</p>
+<pre><code>root@vm:~&#47;fabric# fab -H remotehost.com whoami
+[&#39;remotehost.com&#39;]
+[remotehost.com] run: whoami
+[remotehost.com] out: root
+serviceuser
+
+Done.
+Disconnecting from remotehost.com... done.
+</code></pre><h4>Fabric can report remote command failure or success</h4>
+<p>Add the following to fabfile.py</p>
+
+<pre><code>
+def success():
+     result = run('file /opt')
+     if result.return_code == 0: 
+         print 'return code is 0'
+     print result
+
+def fail():
+    result = run('file /what')
+    if result.return_code != 0: 
+        print 'return code is not 0'
+    print result
+</code></pre>
+
+<p>Execute your commands:</p>
+
+<p>Success&hellip;</p>
+
+<pre><code>
+root@vm:~/fabric# fab -H remotehost.com success
+['remotehost.com']
+[remotehost.com] run: file /opt
+[remotehost.com] out: /opt: directory
+return code is 0
+/opt: directory
+
+Done.
+Disconnecting from remotehost.com... done.
+</code></pre>
+
+<p>Falure&hellip;(as an exception)</p>
+
+<pre><code>
+['remotehost.com']
+[remotehost.com] run: file /what
+[remotehost.com] out: /what: ERROR: cannot open `/what' (No such file or directory)
+
+Fatal error: run() encountered an error (return code 1) while executing 'file /what'
+
+Aborting.
+Disconnecting from remotehost.com... done.
+</code></pre>
+<h4>Fabric can change behavior and settings with <a href="http://docs.fabfile.org/en/1.4.0/usage/env.html">ENV</a></h4>
+<p>Getting remote failures but continuing execution.</p>
+
+<pre><code>
+from fabric.api import env
+env.warn_only = True
+def fail():
+    result = run('file /what')
+    if result.return_code != 0: 
+        print 'return code is not 0'
+    print result
+</code></pre>
+
+<p>Failure (handled gracefully)&hellip;</p>
+
+<pre><code>
+root@vm:~/fabric# fab -H remotehost.com fail
+['remotehost.com']
+[remotehost.com] run: file /what
+[remotehost.com] out: /what: ERROR: cannot open `/what' (No such file or directory)
+
+Warning: run() encountered an error (return code 1) while executing 'file /what'
+
+return code is not 0
+/what: ERROR: cannot open `/what' (No such file or directory)
+
+Done.
+Disconnecting from remotehost.com... done.
+</code></pre>
+<h4><a href="http://docs.fabfile.org/en/1.4.0/usage/env.html">ENV</a> can be directly manipulated but it is canonical either way</h4>
+<pre><code>
+from fabric.api import env, run
+#specify a host to run command on
+env.hosts = ['remotehost.com']
+#specify remote user to use
+env.user = 'serviceuser'
+#specify key file to use
+env.key_filename = '/home/serviceuser/serviceuser.pem'
+#only warn on failure
+env.warn_only = True
+
+def whoami():
+    print env.host_string
+    print run('whoami')
+</code></pre>
+
+<p>This execution&hellip;</p>
+
+<pre><code>
+root@vm:~/fabric# fab whoami
+['remotehost.com']
+remotehost.com
+[remotehost.com] run: whoami
+[remotehost.com] out: serviceuser
+serviceuser
+
+Done.
+Disconnecting from remotehost.com... done.
+</code></pre>
+
+<p>Looks the same as this execution&hellip;</p>
+
+<pre><code>
+root@vm:~/fabric# fab -H remotehost.com whoami
+['remotehost.com']
+remotehost.com
+[remotehost.com] run: whoami
+[remotehost.com] out: serviceuser
+serviceuser
+
+Done.
+Disconnecting from remotehost.com... done.
+</code></pre>
+
+<p>It all sets env.host_string in the end.  I think of it basically as namespace-ish.</p>
+<pre><code>env.host_string = &#39;remotehost2.com&#39; &gt; env.hosts = [&#39;remotehost.com&#39;] &gt; fab -H remotehost.com whoami
+</code></pre>
+<p>If you set this:</p>
+
+<pre><code>
+def whoami():
+    env.host_string = 'remotehost2.com'
+    print run('whoami')
+</code></pre>
+
+<p>If you do &#39;fab -H remotehost.com whoami&#39; or &#39;&#39;env.hosts = [&#39;remotehost.com&#39;]&#39; it still executes on &#39;remotehost2.com&#39;.</p>
+<h4>Fabric functions can accept arguments form the CLI</h4>
+<p>Using the &#39;with&#39; statement here to hide native fabric output since I want to more tightly control what is terminal output in this scenario.</p>
+
+<pre><code>
+from fabric.api import env, run, hide
+
+def command(cmd):
+    with hide('everything'):
+        print run(cmd)
+</code></pre>
+
+<p>Execution runs as me with my ssh key (with argument passing)&hellip;</p>
+<pre><code>rush@vm:~&#47;fabric$ fab -H remotehost2.com command:cmd=&#39;uname -a&#39;
+Linux remotehost2.com 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1 x86_64 GNU&#47;Linux
+
+Done.
+Disconnecting from remotehost2.com... done.
+</code></pre><h4>Fabric functions can be run with fabric as a normal library</h4>
+<p>Setting up your script to use a service account.</p>
+
+<pre><code>
+import sys
+from fabric.api import env, run, hide
+
+def cmd(host, cmd, user):
+    import sys
+    env.host_string = host
+    env.user = user
+    env.key_filename = '/home/%s/.ssh/id_rsa' % (user,)
+    with hide('everything'):
+        return run(cmd)
+
+print cmd(sys.argv[1], sys.argv[2], 'serviceuser')
+</code></pre>
+
+<p>Execution&hellip;</p>
+
+<pre><code>
+root@vm:~/fabric# python cmd.py remotehost2.com 'ls -al'
+total 12
+drwxr-xr-x 3 serviceuser users   65 Apr  9  2012 .
+drwxr-xr-x 9 root        root    96 Jan 11  2013 ..
+drwx------ 2 serviceuser root    28 Apr  9  2012 .ssh
+</code></pre>
+<h4>Reference</h4>
+<p><a href="https://github.com/fabric/fabric">fabric on gh</a><br>
+<a href="http://docs.fabfile.org/en/1.4.0/usage/env.html">ENV</a><br>
+<a href="http://docs.fabfile.org/en/1.4.0/usage/output_controls.html">output controls</a><br>
+<a href="http://stackoverflow.com/questions/4888568/can-i-catch-error-codes-when-using-fabric-to-run-calls-in-a-remote-shell">so errors code with fabric</a><br>
+<a href="http://www.debian-administration.org/articles/671">debian intro</a><br>
+<a href="http://www.linuxjournal.com/content/fabric-system-administrators-best-friend?page=0,1">linux journal</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

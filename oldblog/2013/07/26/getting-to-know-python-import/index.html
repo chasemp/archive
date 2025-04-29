@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>getting to know python import &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>getting to know python import</h1>
+            <h2>Friday, July 26, 2013 <span>&raquo;</span> <a href="/tags/import/">import</a>, <a href="/tags/python/">python</a>, <a href="/tags/tricks/">tricks</a></h2>
+        </div>
+        
+        <div class="body">
+            <h3>Preamble</h3>
+<p>Python&#39;s <a href="https://phrac.deviantart.net/D3628">import</a> system is one of the things that I enjoy about the language. Exploring it is time well spent.  This is somewhat of a practical walk through.  The import system goes pretty deep. There are finders and loaders and all o kinds of awesome details I&#39;m not getting into.  This is not exhaustive but hopefully is useful enough to be worthwhile.</p>
+
+<p>For the full details on import watch the pycon video <a href="http://pyvideo.org/video/1707/how-import-works">here</a></p>
+
+<p>Seriously, awesome talk.</p>
+
+<p><strong>edit 01/02/14</strong></p>
+
+<p>this was meant to be part 1 of a series.  the series has not happened yet so it seems terse.  the talk is still worth watching.</p>
+<h4>The Terrain</h4>
+<p>I am using the interactive <a href="http://docs.python.org/2/tutorial/interpreter.html">interpreter</a> and making basic modules are demonstrated.</p>
+
+<pre><code>
+import sys
+sys.version
+'2.7.1 (r271:86832, Aug  5 2011, 03:30:24) \n[GCC 4.2.1]'
+</code></pre>
+<h3>Easter Eggs</h3>
+<pre><code>
+>>> from __future__ import braces
+  File "<stdin>", line 1
+SyntaxError: not a chance
+>>> 
+</code></pre>
+
+<pre><code>
+>>> import this
+The Zen of Python, by Tim Peters
+
+Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+Complex is better than complicated.
+Flat is better than nested.
+Sparse is better than dense.
+Readability counts.
+Special cases aren't special enough to break the rules.
+Although practicality beats purity.
+Errors should never pass silently.
+Unless explicitly silenced.
+In the face of ambiguity, refuse the temptation to guess.
+There should be one-- and preferably only one --obvious way to do it.
+Although that way may not be obvious at first unless you're Dutch.
+Now is better than never.
+Although never is often better than *right* now.
+If the implementation is hard to explain, it's a bad idea.
+If the implementation is easy to explain, it may be a good idea.
+Namespaces are one honking great idea -- let's do more of those!
+</code></pre>
+
+<pre><code>
+>>> import antigravity
+</code></pre>
+
+<p>You can see it <a href="http://xkcd.com/353/">here</a> but here is the code:</p>
+
+<pre><code>
+import webbrowser
+webbrowser.open("http://xkcd.com/353/")
+</code></pre>
+
+<pre><code>
+>>> import __hello__
+Hello world...
+</code></pre>
+<h3>Importing a module</h3>
+<p>&#39;import&#39; is a python keyword.</p>
+
+<pre><code>
+>>> import keyword
+>>> keyword.iskeyword('import')
+True
+>>> 
+</code></pre>
+
+<p>When you say:</p>
+<pre><code>import urllib
+</code></pre>
+<p>Python does:</p>
+
+<p>sys.modules: looks for a cached module</p>
+
+<p>sys meta_path and name lookup magic here</p>
+<pre><code>Quote:
+
+&lt;pre&gt;&lt;code&gt;
+This allows meta hooks to override sys.path processing,
+frozen modules, or even built-in modules
+&lt;&#47;code&gt;&lt;&#47;pre&gt;
+</code></pre>
+<p>sys.path: Looks for module by name</p>
+
+<p>&ndash;&gt; <a href="http://docs.python.org/dev/reference/import.html#loaders">Loads</a> the module or raises an <a href="http://docs.python.org/dev/library/exceptions.html#ImportError">ImportError</a></p>
+
+<pre><code>
+The importlib implementation avoids using the return value directly.
+Instead, it gets the module object by looking the module name up in sys.modules.
+The indirect effect of this is that an imported module may replace itself in sys.modules.
+This is implementation-specific behavior that is not guaranteed to work in other Python implementations.
+</code></pre>
+
+<pre><code>
+>>> if 'urllib' in sys.modules:
+...    print 'yes!'
+... 
+yes!
+>>>
+</code></pre>
+
+<p>&#39;urllib&#39; is now part of the namespace of my program and references the stdlib module.</p>
+<h4>Where did I find the module using sys.path?</h4>
+<pre><code>
+>>> print urllib.__file__
+/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/urllib.pyc
+</code></pre>
+<h3>Import and Namespace</h3><h4>Top level imports are global variables</h4>
+<p>Before importing os:</p>
+
+<pre><code>
+>>> print globals()
+{'__builtins__': <module '__builtin__' (built-in)>, '__name__': '__main__', '__file__': 'test.py', '__doc__': None, '__package__': None}
+</code></pre>
+
+<p>After importing os:</p>
+
+<pre><code>
+>>> import os
+>>> print globals()
+
+{'__builtins__': <module '__builtin__' (built-in)>, '__file__': 'test.py', '__package__': None, '__name__': '__main__', 'os': <module 'os' from '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/os.pyc'>, '__doc__': None}
+</code></pre>
+<h4>imports inside a function are local</h4>
+<p>json does not show up in my global dict even though I have imported it. Because<br>
+it is contained in the local namespace of my foo() function.</p>
+
+<pre><code>
+>>> def foo():
+...     import json
+... 
+>>> foo()
+>>> print globals()
+
+{'__builtins__': <module '__builtin__' (built-in)>, '__name__': '__main__', 'foo': <function foo at 0x106b0f9b0>, '__doc__': None, '__package__': None}
+
+</code></pre>
+
+<p>Here json is shown in the local dictionary within foo(), but does not show up in globals.</p>
+
+<pre><code>
+>>> def foo():
+...     import json
+...     print locals()
+... 
+>>> foo()
+{'json': <module 'json' from '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/json/__init__.pyc'>}
+>>> print globals()
+{'__builtins__': <module '__builtin__' (built-in)>, '__name__': '__main__', 'foo': <function foo at 0x10a5fd9b0>, '__doc__': None, '__package__': None}
+>>> 
+</code></pre>
+<h3>modules are objects</h3>
+<p>Exploring via <a href="http://docs.python.org/2/library/functions.html#dir">dir</a> and <a href="http://docs.python.org/2/library/functions.html#type">type</a></p>
+
+<pre><code>
+>>> import re
+>>> dir(re)
+['DEBUG', 'DOTALL', 'I', 'IGNORECASE', 'L', 'LOCALE', 'M', 'MULTILINE', 'S', 'Scanner', 
+'T', 'TEMPLATE', 'U', 'UNICODE', 'VERBOSE', 'X', '_MAXCACHE', '__all__', '__builtins__', 
+'__doc__', '__file__', '__name__', '__package__', '__version__', '_alphanum', '_cache',
+'_cache_repl', '_compile', '_compile_repl', '_expand', '_pattern_type', '_pickle', '_subx',
+'compile', 'copy_reg', 'error', 'escape', 'findall', 'finditer', 'match', 'purge', 'search',
+'split', 'sre_compile', 'sre_parse', 'sub', 'subn', 'sys', 'template']
+>>> 
+>>> type(re)
+<type 'module'>
+</code></pre>
+
+<p>You can access their attributes.</p>
+
+<pre><code>
+>>> import re
+>>> print re.__doc__
+Support for regular expressions (RE).
+
+This module provides regular expression matching operations similar to
+those found in Perl.  It supports both 8-bit and Unicode strings; both
+the pattern and the strings being processed can contain null bytes and
+characters outside the US ASCII range.
+
+Regular expressions can contain both special and ordinary characters.
+Most ordinary characters, like "A", "a", or "0", are the simplest
+regular expressions; they simply match themselves.  You can
+concatenate ordinary characters, so last matches the string 'last'.
+
+--- excluded for brevity ---
+</code></pre>
+<h3><strong>future</strong> allows use of future features</h3><h4><a href="http://docs.python.org/2/reference/simple_stmts.html#future-statements"><strong>future</strong></a> is not at its heart a module import</h4>
+<pre><code>
+A future statement is a directive to the compiler that a particular module
+should be compiled using syntax or semantics that will be available in a
+specified future release of Python. The future statement is intended to ease
+migration to future versions of Python that introduce incompatible changes to
+the language. It allows use of the new features on a per-module basis before
+the release in which the feature becomes standard.
+</code></pre>
+
+<ul>
+<li>future statements need to be at the top of the file</li>
+<li>future statements change how your module is parsed</li>
+</ul>
+
+<p>That&#39;s why this namespace import seems funky.  It&#39;s not a standard import&#39;</p>
+
+<pre><code>
+>>> from __future__ import print_function
+#is still 'print' and not 'print_function' call
+print('wtf')
+</code></pre>
+<h4>Reference</h4>
+<p><a href="http://ericsnowcurrently.blogspot.com/p/python-imports.html">imports one</a><br>
+<a href="http://utcc.utoronto.ca/%7Ecks/space/blog/python/ImportTricks">imports two</a><br>
+<a href="http://docs.python.org/2/library/imp.html">imp docs</a><br>
+<a href="http://pymotw.com/2/imp/">imp module motw</a><br>
+<a href="http://www.slideshare.net/audreyr/python-tricks-that-you-cant-live-without">python-tricks-that-you-cant-live-without</a><br>
+<a href="http://blog.dowski.com/2008/07/31/customizing-the-python-import-system/">customizing-the-python-import-system</a><br>
+<a href="http://docs.python.org/2/library/__future__.html">future statements</a><br>
+<a href="http://docs.python.org/2/reference/simple_stmts.html#future-statements">future statements summary</a><br>
+<a href="http://stackoverflow.com/questions/7075082/what-is-future-in-python-used-for-and-how-when-to-use-it-and-how-it-works">so future staments</a><br>
+<a href="http://www.python.org/dev/peps/pep-0420/">PEP 420 &ndash; Implicit Namespace Packages</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

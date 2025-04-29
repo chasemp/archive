@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>user args to python variables &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>user args to python variables</h1>
+            <h2>Monday, November 04, 2013 <span>&raquo;</span> <a href="/tags/python/">python</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Sometimes there is no choice to but to take a certain action from a configuration file or user input.  This can involve a device type or parameter that is essentially a class specification.  There are few ways to do this kind of matching that I know of.</p>
+
+<p>All of these examples have the same output:</p>
+<pre><code>me@vm:python test.py Fun
+Fun
+HI Im Fun!
+</code></pre><h4>Using <a href="http://docs.python.org/2/library/functions.html#eval">Eval</a></h4>
+<p>Well&hellip;<a href="http://docs.python.org/2/library/functions.html#eval">eval</a> can ultimately be used for good or evil. This is pretty much evil but does work.</p>
+
+<pre><code>
+import sys
+
+class Fun(object):
+    def __init__(self):
+        print 'HI Im Fun!'
+
+arg = sys.argv[1]
+print arg
+myclass = eval(arg)
+instance = myclass()
+</code></pre>
+
+<p>The obvious fear here is someone doing something harmful that could start like:</p>
+<pre><code>python test.py &quot;sys.path.append(&#39;&#47;opt&#39;)&quot;
+</code></pre>
+<p>Which just results in:</p>
+<pre><code>sys.path.append(&#39;&#47;opt&#39;)
+Traceback (most recent call last):
+File &quot;test.py&quot;, line 10, in &lt;module&gt;
+instance = myclass()
+</code></pre>
+<p>But does show harm potential as we can see &#39;/opt&#39; in our modified path.</p>
+<h4>Using <a href="http://docs.python.org/2/library/functions.html#getattr">Getattr</a></h4>
+<p>Probably the most canonical and readable option.  This is still, at least in my eyes, a potentially unsafe operation if it is as blatant as this.  Taking a raw string from a user as your class name is definitly not something to do in the wild.  Python namespaces can be tricky things and getattr is not to be used without caution.</p>
+
+<pre><code>
+import sys
+
+class Fun(object):
+    def __init__(self):
+        print 'HI Im Fun!'
+
+arg = sys.argv[1]
+print arg
+myclass = getattr(sys.modules[__name__], arg)
+instance = myclass()
+</code></pre>
+<h4>Predefined dictionary</h4>
+<p>This may be the most manual and safest option.  Manual being the downside.</p>
+
+<pre><code>
+import sys
+
+class Fun(object):
+    def __init__(self):
+        print 'HI Im Fun!'
+
+classes = {'Fun': Fun}
+
+arg = sys.argv[1]
+print arg
+myclass = classes[arg]
+instance = myclass()
+</code></pre>
+<h4>Inspect defined dictionary</h4>
+<p>This is the approach I have taken in the past.  This allows for only predefined classes by convention, and the list doesn&#39;t have to be maintained manually.</p>
+
+<pre><code>
+import sys
+
+class user_Fun(object):
+    def __init__(self):
+        print 'HI Im Fun!'
+
+#classes = {'Fun': Fun}
+
+import inspect
+#http://stackoverflow.com/questions/1796180/python-get-list-of-all-classes-within-current-module
+clsmembers = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+#[('user_Fun', <class '__main__.user_Fun'>)]
+classes = {}
+for discoveredclass in clsmembers:
+    classes[discoveredclass[0].split('_')[1]] = discoveredclass[1]
+
+#we get
+#print classes >> {'Fun': <class '__main__.user_Fun'>}
+
+arg = sys.argv[1]
+print arg
+myclass = classes[arg]
+instance = myclass()
+</code></pre>
+<h4>Reference</h4>
+<p><a href="http://docs.python.org/2/library/functions.html#getattr">getattr</a><br>
+<a href="http://docs.python.org/2/library/functions.html#eval">eval</a><br>
+<a href="http://docs.python.org/2/library/inspect.html">inspect</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

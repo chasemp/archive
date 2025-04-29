@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>osx clang compiler unknown option &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>osx clang compiler unknown option</h1>
+            <h2>Tuesday, March 18, 2014 <span>&raquo;</span> <a href="/tags/clang/">clang</a>, <a href="/tags/mynt/">mynt</a>, <a href="/tags/osx/">osx</a></h2>
+        </div>
+        
+        <div class="body">
+            <p>As of OSX Xcode tools &lt;=5.1 the clang compiler treats any unknown flag as an error.<br>
+This can cause some issues with existing tools that have old flags, or uncommon flags,<br>
+or who knows what.</p>
+
+<p>You see something like:</p>
+<pre><code>clang: error: unknown argument: &#39;-mno-fused-madd&#39; [-Wunused-command-line-argument-hard-error-in-future]
+</code></pre>
+<p>I see this when doing:</p>
+<pre><code>#on maverick
+pip install mynt
+</code></pre>
+<p>It is an easy fix for now to ignore this for an oneoff:</p>
+<pre><code>ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future pip install mynt
+</code></pre>
+<p>I have read you can also ditch the OSX native python and install it from brew and things work out.</p>
+<h4>Reference:</h4>
+<p><a href="http://stackoverflow.com/questions/22313407/clang-error-unknown-argument-mno-fused-madd-python-package-installation-fa">so</a><br>
+<a href="http://clang.llvm.org/docs/UsersManual.html">compiler docs</a><br>
+<a href="https://github.com/rmagick/rmagick/issues/96">ruby guys are seeing it too</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

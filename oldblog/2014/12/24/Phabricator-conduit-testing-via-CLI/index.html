@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>Phabricator conduit testing via CLI &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>Phabricator conduit testing via CLI</h1>
+            <h2>Wednesday, December 24, 2014 <span>&raquo;</span> <a href="/tags/conduit/">conduit</a>, <a href="/tags/phabricator/">phabricator</a></h2>
+        </div>
+        
+        <div class="body">
+            <p>Search for a user by username:</p>
+<pre><code>echo &#39;{&quot;usernames&quot;: [&quot;admin&quot;]}&#39; | \
+&#47;srv&#47;phab&#47;arcanist&#47;bin&#47;arc call-conduit user.query
+</code></pre>
+<p>Get task information by id:</p>
+<pre><code>echo &#39;{&quot;task_id&quot;: &quot;9&quot;}&#39; | \
+&#47;srv&#47;phab&#47;arcanist&#47;bin&#47;arc call-conduit maniphest.info
+</code></pre>
+<p>Add comments to a task:</p>
+<pre><code>echo &#39;{&quot;id&quot;: &quot;9&quot;, &quot;comments&quot;: &quot;this is comment1&quot;}&#39; | \
+&#47;srv&#47;phab&#47;arcanist&#47;bin&#47;arc call-conduit maniphest.update
+</code></pre>
+<p>Create a task:</p>
+<pre><code>echo &#39;{&quot;title&quot;:&quot;foo 123&quot;}&#39; | \
+&#47;srv&#47;phab&#47;arcanist&#47;bin&#47;arc call-conduit maniphest.createtask
+</code></pre>
+<p>Create a task while supplying a <a href="https://secure.phabricator.com/book/phabricator/article/custom_fields/">custom field value</a>:</p>
+<pre><code>echo &#39;{&quot;title&quot;:&quot;foo 234&quot;, &quot;auxiliary&quot;:{&quot;std:maniphest:external_id&quot;:&quot;789&quot;}}&#39; | \
+&#47;srv&#47;phab&#47;arcanist&#47;bin&#47;arc call-conduit maniphest.createtask
+</code></pre>
+<p>If you want more debugging information on any call you can add &ndash;trace.</p>
+<h4>References</h4>
+<p><a href="https://secure.phabricator.com/book/phabricator/article/custom_fields/">Phab custom fields</a><br>
+<a href="https://secure.phabricator.com/book/phabdev/article/conduit/">Phab conduit</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

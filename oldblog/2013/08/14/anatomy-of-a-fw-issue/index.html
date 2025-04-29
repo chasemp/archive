@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>anatomy of a fw vpn issue &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>anatomy of a fw vpn issue</h1>
+            <h2>Wednesday, August 14, 2013 <span>&raquo;</span> <a href="/tags/asa/">asa</a>, <a href="/tags/cisco/">cisco</a>, <a href="/tags/fw/">fw</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>I recently had to jump in on a Firewall issue. Traffic was not passing on a new IPSec tunnel.  I thought I would layout my troubleshooting for further reflection.</p>
+<h4>Problem</h4>
+<p>Sorry, no visio.</p>
+
+<p><img src="/assets/images/anatonmyfw.png" alt="diagram" title="fw"></p>
+
+<p>The VPN between FW1 and FW2 does not pass traffic.  FW1 is the hub of several VPN L2L tunnels. FW2 has no pre-exiting VPN sessions.</p>
+
+<p>Details have been masked for obvious reasons.</p>
+<h3>Verify basic IP connectivity</h3><h4>HOST2</h4>
+<p>What is my ip?</p>
+
+<pre><code>
+me@HOST2# ifconfig
+eth2      Link encap:Ethernet  HWaddr 00:50:56:02:XX.XX  
+          inet addr:10.10.0.4  Bcast:10.10.0.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+</code></pre>
+
+<p>What are my routes?</p>
+
+<pre><code>
+me@HOST2# ip route show
+10.10.0.0/24 dev eth2  proto kernel  scope link  src 10.10.0.4 
+169.254.0.0/16 dev eth2  scope link  metric 1002 
+default via 10.10.0.1 dev eth2 
+</code></pre>
+
+<p>Can I ping my default gw?</p>
+
+<pre><code>
+me@HOST2# ping 10.10.0.1
+PING 10.10.0.1 (10.10.0.1) 56(84) bytes of data.
+64 bytes from 10.10.0.1: ICMP_seq=6 ttl=63 time=49.2 ms
+</code></pre>
+<h4>HOST1</h4>
+<p>What is my ip?</p>
+
+<pre><code>
+[root@HOST1 ~]# ifconfig
+eth0      Link encap:Ethernet  HWaddr 00:50:56:02:XX.XX  
+          inet addr:10.0.0.230  Bcast:10.10.0.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+</code></pre>
+
+<p>What are my routes?</p>
+
+<pre><code>
+[root@HOST1 ~]# ip route show
+10.0.0.0/24 dev eth0  proto kernel  scope link  src 10.0.0.230
+default via 10.0.0.210 dev eth0
+</code></pre>
+
+<p>Can I ping my default gw?</p>
+
+<pre><code>
+[root@HOST1 ~]# ping 10.0.0.210
+PING 10.0.0.210 (10.0.0.210) 56(84) bytes of data.
+64 bytes from 10.0.0.210: ICMP_seq=6 ttl=63 time=49.2 ms
+</code></pre>
+<h3>FW1</h3>
+<pre><code>
+FW1> ping 1.1.1.1
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 1.1.1.1, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 40/50/60 ms
+</code></pre>
+
+<pre><code>
+FW1> ping 10.0.0.230
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to banacek, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms
+</code></pre>
+<h3>FW2</h3>
+<p>Here&#39;s the kicker.  This is a black box to me.  I knew enough to know that it should work.</p>
+<h3>Foreknowledge</h3>
+<p>I knew this was the relevant stanza on FW1.</p>
+
+<pre><code>
+crypto map outside_map 120 match address yeehaw-cryptomap
+crypto map outside_map 120 set pfs
+crypto map outside_map 120 set peer 1.1.1.1
+crypto map outside_map 120 set transform-set ESP-AES-256-SHA
+</code></pre>
+<h3>Investigating</h3>
+<p>SSH&#39;ed into FW1 to check things out.</p>
+
+<p>Show me the offending crypt-map</p>
+
+<pre><code>
+FW1# sh ru  cry map | in 120
+crypto map outside_map 120 match address yeehaw-cryptomap
+crypto map outside_map 120 set pfs 
+crypto map outside_map 120 set peer 1.1.1.1 
+crypto map outside_map 120 set transform-set ESP-AES-256-SHA
+</code></pre>
+
+<p>show me any relevant security associations, A.K.A. Is The Tunnel Up?</p>
+
+<pre><code>
+FW1(config)# sh cry ipse sa peer 1.1.1.1
+peer address: 1.1.1.1
+    Crypto map tag: outside_map, seq num: 120, local addr: 2.2.2.2
+
+      access-list yeehaw-cryptomap extended permit ip 10.0.0.0 255.255.0.0 10.10.0.0 255.255.0.0 log 
+      local ident (addr/mask/prot/port): (10.0.0.0/255.255.255.0/0/0)
+      remote ident (addr/mask/prot/port): (10.10.0.0/255.255.255.0/0/0)
+      current_peer: 1.1.1.1
+
+      #pkts encaps: 0, #pkts encrypt: 0, #pkts digest: 0
+      #pkts decaps: 3, #pkts decrypt: 3, #pkts verify: 3
+      #pkts compressed: 0, #pkts decompressed: 0
+      #pkts not compressed: 0, #pkts comp failed: 0, #pkts decomp failed: 0
+      #pre-frag successes: 0, #pre-frag failures: 0, #fragments created: 0
+      #PMTUs sent: 0, #PMTUs rcvd: 0, #decapsulated frgs needing reassembly: 0
+      #send errors: 0, #recv errors: 0
+
+      local crypto endpt.: 2.2.2.2/0, remote crypto endpt.: 1.1.1.1/0
+      path mtu 1500, ipsec overhead 74, media mtu 1500
+      current outbound spi: C6DB9A2B
+      current inbound spi : 946A6811
+
+    inbound esp sas:
+      spi: 0x946A6811 (2490001425)
+         transform: esp-aes-256 esp-sha-hmac no compression 
+         in use settings ={L2L, Tunnel, PFS Group 2, }
+         slot: 0, conn_id: 55099392, crypto-map: outside_map
+      *** ESP SA deleted ***
+    *** Tunnel rekeyed or deleted ***
+</code></pre>
+
+<p>Show me the access-list that defines interesting traffic</p>
+
+<pre><code>
+FW1(config)# sh run access-l yeehaw-cryptomap
+access-list yeehaw-cryptomap extended permit ip 10.0.0.0 255.255.0.0 10.10.0.0 255.255.0.0 log 
+</code></pre>
+
+<p>Show me my transform sets to make sure they are sane</p>
+
+<pre><code>
+FW1(config)# sh run cry
+crypto ipsec transform-set ESP-3DES-SHA esp-3des esp-sha-hmac 
+crypto ipsec transform-set ESP-3DES-MD5 esp-3des esp-md5-hmac 
+crypto ipsec transform-set ESP-AES-128-SHA esp-aes esp-sha-hmac 
+crypto ipsec transform-set ESP-AES-128-MD5 esp-aes esp-md5-hmac 
+crypto ipsec transform-set ESP-AES-192-SHA esp-aes-192 esp-sha-hmac 
+crypto ipsec transform-set ESP-AES-192-MD5 esp-aes-192 esp-md5-hmac 
+crypto ipsec transform-set ESP-AES-256-SHA esp-aes-256 esp-sha-hmac 
+crypto ipsec transform-set ESP-AES-256-MD5 esp-aes-256 esp-md5-hmac 
+crypto ipsec transform-set ESP-AES-128-SHA-TRANS esp-aes esp-sha-hmac 
+crypto ipsec transform-set ESP-AES-128-SHA-TRANS mode transport
+crypto ipsec transform-set ESP-AES-128-MD5-TRANS esp-aes esp-md5-hmac 
+crypto ipsec transform-set ESP-AES-128-MD5-TRANS mode transport
+crypto ipsec transform-set ESP-AES-192-SHA-TRANS esp-aes-192 esp-sha-hmac 
+crypto ipsec transform-set ESP-AES-192-SHA-TRANS mode transport
+crypto ipsec transform-set ESP-AES-192-MD5-TRANS esp-aes-192 esp-md5-hmac 
+crypto ipsec transform-set ESP-AES-192-MD5-TRANS mode transport
+crypto ipsec transform-set ESP-AES-256-SHA-TRANS esp-aes-256 esp-sha-hmac 
+crypto ipsec transform-set ESP-AES-256-SHA-TRANS mode transport
+crypto ipsec transform-set ESP-AES-256-MD5-TRANS esp-aes-256 esp-md5-hmac 
+crypto ipsec transform-set ESP-AES-256-MD5-TRANS mode transport
+crypto ipsec transform-set ESP-3DES-SHA-TRANS esp-3des esp-sha-hmac 
+crypto ipsec transform-set ESP-3DES-SHA-TRANS mode transport
+crypto ipsec transform-set ESP-3DES-MD5-TRANS esp-3des esp-md5-hmac 
+crypto ipsec transform-set ESP-3DES-MD5-TRANS mode transport
+crypto ipsec transform-set ESP-DES-SHA esp-des esp-sha-hmac
+</code></pre>
+
+<p>Nat-T status</p>
+
+<pre><code>
+FW1(config)# cry isa nat-traversal
+FW1(config)#
+</code></pre>
+
+<p>This configuration should work.  The tunnel is establishing.</p>
+<h3>What happens when I ping from Host2?</h3>
+<pre><code>
+me@HOST2# ping 10.0.0.230
+PING 10.0.0.230 (10.0.0.230) 56(84) bytes of data.
+^C
+--- 10.0.0.230 ping statistics ---
+210 packets transmitted, 0 received, 100% packet loss, time 209248ms
+</code></pre>
+
+<p>Stalls out big time.  No response.</p>
+
+<p>So I start a continuous ping from Host2 to Host1.</p>
+
+<pre><code>
+me@HOST2# ping 10.0.0.230
+PING 10.0.0.230 (10.0.0.230) 56(84) bytes of data.
+</code></pre>
+
+<p>What do I see with debug enabled for ICMP on FW1 &ndash; the opposing end of the VPN from Host2.</p>
+
+<pre><code>
+FW1(config)# debug ICMP trace 
+debug ICMP trace enabled at level 1
+
+ICMP echo request from Outside:8.8.8.8 to Inside:9.9.9.9 ID=0 seq=0 len=0
+ICMP echo request untranslating Outside:9.9.9.9 to Inside:10.0.0.216
+ICMP echo reply from Inside:10.0.0.216 to Outside:8.8.8.8 ID=0 seq=0 len=0
+ICMP echo reply translating Inside:10.0.0.216 to Outside:9.9.9.9
+</code></pre>
+
+<p>Lots of ICMP but none for my source.</p>
+
+<pre><code>
+    FW1(config)# un all
+</code></pre>
+<h3>Maybe NAT is to blame?</h3>
+<p>I know I don&#39;t want to NAT these packets and I also know NAT is enabled.  For the ASA<br>
+that means we need exclusions.</p>
+
+<pre><code>
+FW1(config)# sh ru nat
+nat (Inside,Outside) source static INSIDE_HOSTS-10.0.0.0 INSIDE_HOSTS-10.0.0.0 \
+                      destination static FW2_HOSTS_10.10.0.0_24 FW2_HOSTS_10.10.0.0_24
+</code></pre>
+
+<p>This looks right for =&lt;8.3 versions of ASA.  Although I find the syntax is lacking in clarify <br>
+compared to the old Nat-0 configuration.</p>
+<h3>Show me that peer session again</h3>
+<pre><code>
+FW1(config)# sh cry ipse sa peer 1.1.1.1
+peer address: 1.1.1.1
+    Crypto map tag: outside_map, seq num: 120, local addr: 2.2.2.2
+
+      access-list yeehaw-cryptomap extended permit ip 10.0.0.0 255.255.0.0 10.10.0.0 255.255.0.0 log 
+      local ident (addr/mask/prot/port): (10.0.0.0/255.255.255.0/0/0)
+      remote ident (addr/mask/prot/port): (10.10.0.0/255.255.255.0/0/0)
+      current_peer: 1.1.1.1
+
+      #pkts encaps: 0, #pkts encrypt: 0, #pkts digest: 0
+      #pkts decaps: 391, #pkts decrypt: 391, #pkts verify: 391
+      #pkts compressed: 0, #pkts decompressed: 0
+      #pkts not compressed: 0, #pkts comp failed: 0, #pkts decomp failed: 0
+      #pre-frag successes: 0, #pre-frag failures: 0, #fragments created: 0
+      #PMTUs sent: 0, #PMTUs rcvd: 0, #decapsulated frgs needing reassembly: 0
+      #send errors: 0, #recv errors: 0
+
+      local crypto endpt.: 2.2.2.2/0, remote crypto endpt.: 1.1.1.1/0
+      path mtu 1500, ipsec overhead 74, media mtu 1500
+      current outbound spi: 2B643D23
+      current inbound spi : EDC8A714
+
+    inbound esp sas:
+      spi: 0xEDC8A714 (3989350164)
+         transform: esp-aes-256 esp-sha-hmac no compression 
+         in use settings ={L2L, Tunnel, PFS Group 2, }
+</code></pre>
+ 
+
+<p>This now stands out to me:</p>
+
+<p>&ndash;&gt; pkts encaps: 0, #pkts encrypt: 0, #pkts digest: 0<br>
+&ndash;&gt; pkts decaps: 391, #pkts decrypt: 391, #pkts verify: 391</p>
+
+<p>As far as I know that means we are receiving encrypted traffic but we are not <br>
+responding.  We have decrypted but not encrypted traffic.  It seems like the &#39;black box&#39;<br>
+is not to blame&hellip;FW1 is not doing its job.  </p>
+<h3>Checking my sysopt parameters</h3>
+<p>These are global options similar to sysctl.conf in linux</p>
+
+<pre><code>
+FW1(config)# sh run all sysopt
+no sysopt connection timewait
+sysopt connection tcpmss 1380
+sysopt connection tcpmss minimum 0
+sysopt connection permit-vpn
+sysopt connection reclassify-vpn
+sysopt connection preserve-vpn-flows
+</code></pre>
+
+<p>This looks good.  </p>
+<h3>Taking stock</h3>
+<p>A few points I considered:</p>
+
+<ol>
+<li> My tunnel comes up so all Phasev1 and Phasev2 stuff is solid.</li>
+<li> I have seen protocol 50 blocking in the middle of a VPN cause
+this type of issue but <em>neither</em> side could transmit encrypted traffic.</li>
+<li> I have seen unidirectional crypto traffic on endpoint crypto-map
+mismatches, but I would expect FW1 to be the successful party.</li>
+<li>All raw connectivity works.</li>
+<li>I didn&#39;t show it but I know my Inside ACL is not blocking traffic.</li>
+</ol>
+
+<p>At this point I&#39;m frustrated.</p>
+
+<p>Fortunately, the ASA has a genius troubleshooting tool called packet-tracer.</p>
+<h3>Packet Tracer</h3>
+<p>Simulate an ICMP packet from HOST1 to HOST2</p>
+
+<pre><code>
+FW1(config)# packet-tracer input inside ICMP 10.0.0.230 8 0 10.10.0.4 de
+
+Phase: 1
+Type: ACCESS-LIST
+Subtype: 
+Result: ALLOW
+Config:
+Implicit Rule
+Additional Information:
+ Forward Flow based lookup yields rule:
+ in  id=0xaccf5600, priority=1, domain=permit, deny=false
+    hits=2684148409, user_data=0x0, cs_id=0x0, l3_type=0x8
+    src mac=0000.0000.0000, mask=0000.0000.0000
+    dst mac=0000.0000.0000, mask=0100.0000.0000
+    input_ifc=Inside, output_ifc=any
+
+Phase: 2
+Type: ROUTE-LOOKUP
+Subtype: input
+Result: ALLOW
+Config:
+Additional Information:
+in   0.0.0.0         0.0.0.0         Outside
+
+Phase: 3
+Type: IP-OPTIONS
+Subtype:      
+Result: ALLOW
+Config:
+Additional Information:
+ Forward Flow based lookup yields rule:
+ in  id=0xaccf8470, priority=0, domain=inspect-ip-options, deny=true
+    hits=7676990, user_data=0x0, cs_id=0x0, reverse, flags=0x0, protocol=0
+    src ip/id=0.0.0.0, mask=0.0.0.0, port=0
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0
+    input_ifc=Inside, output_ifc=any
+
+Phase: 4
+Type: INSPECT
+Subtype: np-inspect
+Result: ALLOW
+Config:
+Additional Information:
+ Forward Flow based lookup yields rule:
+ in  id=0xaccf80d8, priority=66, domain=inspect-ICMP-error, deny=false
+    hits=408286, user_data=0xaccf7fc0, cs_id=0x0, use_real_addr, flags=0x0, protocol=1
+    src ip/id=0.0.0.0, mask=0.0.0.0, port=0
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0
+    input_ifc=Inside, output_ifc=any
+
+Phase: 5      
+Type: DEBUG-ICMP
+Subtype: 
+Result: ALLOW
+Config:
+Additional Information:
+ Forward Flow based lookup yields rule:
+ in  id=0xadc415a0, priority=13, domain=debug-ICMP-trace, deny=false
+    hits=8, user_data=0x0, cs_id=0x0, reverse, flags=0x0, protocol=1
+    src ip/id=0.0.0.0, mask=0.0.0.0, port=0
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0
+    input_ifc=Inside, output_ifc=any
+
+Phase: 6
+Type: NAT
+Subtype: 
+Result: ALLOW
+Config:
+nat (Inside,Outside) source static INSIDE_HOSTS-10.0.0.0 INSIDE_HOSTS-10.0.0.0 \
+                destination static FW2_HOSTS_10.10.0.0_24 FW2_HOSTS_10.10.0.0_24
+Additional Information:
+Static translate banacek/0 to banacek/0
+ Forward Flow based lookup yields rule:
+ in  id=0xadb88110, priority=6, domain=nat, deny=false
+    hits=1942, user_data=0xad629e20, cs_id=0x0, use_real_addr, flags=0x0, protocol=0
+        src ip/id=10.0.0.0, mask=255.255.255.0, port=0
+    dst ip/id=10.10.0.0, mask=255.255.255.0, port=0, dscp=0x0
+    input_ifc=Inside, output_ifc=Outside
+
+Phase: 7
+Type: ACCESS-LIST
+Subtype: vpn-user
+Result: DROP
+Config:
+Additional Information:
+ Forward Flow based lookup yields rule:
+ out id=0xac7a22d0, priority=12, domain=vpn-user, deny=true
+    hits=1978, user_data=0xa90e0a00, filter_id=0x0(-implicit deny-), protocol=0
+    src ip=0.0.0.0, mask=0.0.0.0, port=0
+    dst ip=0.0.0.0, mask=0.0.0.0, port=0
+
+Result:
+input-interface: Inside
+input-status: up
+input-line-status: up
+output-interface: Outside
+output-status: up
+output-line-status: up
+Action: drop
+Drop-reason: (acl-drop) Flow is denied by configured rule
+
+
+It seems like there is an ACL configured that is dropping traffic.
+
+Phase: 7
+Type: ACCESS-LIST
+Subtype: vpn-user
+Result: DROP
+</code></pre>
+
+<p>&ndash;&gt; Drop-reason: (acl-drop) Flow is denied by configured rule</p>
+<h3>The Problem</h3>
+<pre><code>
+FW1(config)# sh run tun
+<output omitted>
+tunnel-group 1.1.1.1 type ipsec-l2l
+tunnel-group 1.1.1.1 general-attributes
+ default-group-policy mygrpplcy
+tunnel-group 1.1.1.1 ipsec-attributes
+ pre-shared-key *****
+<output omitted>
+</code></pre>
+
+<p>Someone applied a group policy to my L2L VPN.</p>
+
+<pre><code>
+FW1(config)#    sh run group-p mygrpplcy
+group-policy mygrpplcy internal
+group-policy mygrpplcy attributes
+ vpn-filter value Outside_cryptomap_120
+ vpn-tunnel-protocol IPSec l2tp-ipsec 
+</code></pre>
+
+<p>That group policy has a vpn-filter.  Basically, an ACL.  </p>
+
+<p>That ACL only allows traffic one way since it is the crypto ACL for our<br>
+side of the tunnel.</p>
+
+<pre><code>
+access-list Outside_cryptomap_120 extended permit ip 10.0.0.0 255.255.255.0 10.10.0.0 255.255.255.0 
+</code></pre>
+
+<p>Now I know why my ping from Host2 doesn&#39;t do anything.</p>
+<h3>The Fix</h3>
+<p>I talked to the relevant people and it turns out this group-policy is erroneous.</p>
+
+<pre><code>
+FW1(config)# group-policy mygrpplcy attributes
+FW1(config-group-policy)# no vpn-filter value Outside_cryptomap_120
+FW1(config)# clear crypto ipsec sa peer 1.1.1.1
+</code></pre>
+
+<p>Just like that everything worked.</p>
+<h3>Lessons Learned</h3>
+<ol>
+<li> group-policy can be applied to L2L tunnels.  It makes sense, but I
+wasn&#39;t looking for it initially.</li>
+<li> vpn-filter dropped traffic does not show up in ASDM logs by default.</li>
+<li> packet-tracer is awesome.</li>
+</ol>
+<h4>Reference</h4>
+<p><a href="https://supportforums.cisco.com/docs/DOC-5796">packet tracer</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

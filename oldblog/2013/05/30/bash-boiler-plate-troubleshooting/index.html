@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>bash boiler plate troubleshooting &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>bash boiler plate troubleshooting</h1>
+            <h2>Thursday, May 30, 2013 <span>&raquo;</span> <a href="/tags/bash/">bash</a>, <a href="/tags/debug/">debug</a></h2>
+        </div>
+        
+        <div class="body">
+            <h3>Preamble</h3>
+<p>I have a bash script that is being called multiple times instead of once.<br>
+I need to track down where it is being called from.</p>
+
+<p>Boiler plate that is nice for troubleshooting</p>
+<h4>Snippet</h4>
+<pre><code>
+function trouble {
+    echo "--------------------"
+    date
+    echo "whoami: $(whoami)"
+    echo "userid: $(id -u)"
+    echo "My pid is $$"
+    echo "working dir: $(pwd)"
+    echo "Called as: $0"
+    echo "Arguments: $@"
+    echo "user_pstree_begin"
+    pstree $(whoami) -l
+    echo "user_pstree_end"
+    echo "pid_pstree_begin"
+    pstree -np $$
+    echo "pid_pstree_end"
+    echo "--------------------"
+}
+
+set -x
+epochtime=$(date +%s)
+file="/tmp/debug-$epochtime.log"
+logger "Creating: $file"
+trouble > $file
+</code></pre>
+<h4>Looks like</h4>
+<pre><code>
+<me>@<host>:~# cat /tmp/debug-1369940847.log 
+--------------------
+Thu May 30 12:07:27 PDT 2013
+whoami: <me>
+userid: 0
+My pid is 19891
+ps_tree_begin
+test.sh(19891)---pstree(19896)
+ps_tree_end
+working dir: /home/<me>
+Called as: ./test.sh
+Arguments: 
+--------------------
+<me>@<host>:~# 
+
+</code></pre>
+<h4>Syslog shows:</h4><pre><code>&lt;host&gt; &lt;me&gt;: Creating: &#47;tmp&#47;debug-1369940847.log
+</code></pre>
+<p>This is especially helpful for cron jobs or background scripts.</p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

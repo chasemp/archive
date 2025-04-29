@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>examining PXE boot &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>examining PXE boot</h1>
+            <h2>Wednesday, August 29, 2012 <span>&raquo;</span> <a href="/tags/PXE/">PXE</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>I have a host with MAC 00:30:48:60:f3:ca.  This host is configured to look for a PXE server, but was not matching <br>
+the correct profile.</p>
+<h4>Verify my configuration</h4>
+<p>dhcpd.conf:</p>
+
+<pre><code>
+option PXE.mtftp-cport          code 2 = unsigned integer 16;
+option PXE.mtftp-sport          code 3 = unsigned integer 16;
+option PXE.mtftp-tmout          code 4 = unsigned integer 8;
+option PXE.mtftp-delay          code 5 = unsigned integer 8;
+option PXE.discovery-control    code 6 = unsigned integer 8;
+option PXE.discovery-mcast-addr code 7 = ip-address;
+
+authoritative;
+
+class "PXEclients" {
+    match if (
+          (substring (option vendor-class-identifier, 0, 9) = "PXEClient")
+      or  (substring (option vendor-class-identifier, 0, 9) = "Etherboot"));
+    option vendor-class-identifier "PXEClient";
+    vendor-option-space PXE;
+    option PXE.mtftp-ip 0.0.0.0;
+    filename "PXElinux.0";
+    next-server <PXE_server_ip>;
+}
+</code></pre>
+<h4>is DHCP serving correctly?</h4>
+<pre><code>
+<pxe/tftp/server>.da.bootps > <otherhost>.da.bootpc: BOOTP/DHCP, Reply, length 300
+<dhcp_relay>.bootps > <pxe/tftp/server>.da.bootps: BOOTP/DHCP, Request from 00:30:48:60:f3:ca (oui Unknown), length 548
+<pxe/tftp/server>.da.bootps > <dhcp_relay>.bootps: BOOTP/DHCP, Reply, length 319
+<dhcp_relay>.bootps > <pxe/tftp/server>.da.bootps: BOOTP/DHCP, Request from 00:30:48:60:f3:ca (oui Unknown), length 548
+</code></pre>
+<h4>Is TFTP matching correctly?</h4>
+<pre><code>
+<me>@<pxe/tftp/server>:~# tcpdump port 69
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+10.0.254.247.2070 > <pxe/tftp/server>.da.tftp:  27 RRQ "PXElinux.0" octet tsize 0
+10.0.254.247.2071 > <pxe/tftp/server>.da.tftp:  32 RRQ "PXElinux.0" octet blksize 1456
+10.0.254.247.49152 > <pxe/tftp/server>.da.tftp:  79 RRQ "PXElinux.cfg/53d19f64-d663-a017-8922-00304860f3ca" octet tsize 0 blksize 1408
+10.0.254.247.49153 > <pxe/tftp/server>.da.tftp:  63 RRQ "PXElinux.cfg/01-00-30-48-60-f3-ca" octet tsize 0 blksize 1408
+10.0.254.247.49154 > <pxe/tftp/server>.da.tftp:  51 RRQ "PXElinux.cfg/0A00FEF7" octet tsize 0 blksize 1408
+10.0.254.247.49155 > <pxe/tftp/server>.da.tftp:  50 RRQ "PXElinux.cfg/0A00FEF" octet tsize 0 blksize 1408
+10.0.254.247.49156 > <pxe/tftp/server>.da.tftp:  49 RRQ "PXElinux.cfg/0A00FE" octet tsize 0 blksize 1408
+10.0.254.247.49157 > <pxe/tftp/server>.da.tftp:  48 RRQ "PXElinux.cfg/0A00F" octet tsize 0 blksize 1408
+10.0.254.247.49158 > <pxe/tftp/server>.da.tftp:  47 RRQ "PXElinux.cfg/0A00" octet tsize 0 blksize 1408
+10.0.254.247.49159 > <pxe/tftp/server>.da.tftp:  46 RRQ "PXElinux.cfg/0A0" octet tsize 0 blksize 1408
+10.0.254.247.49160 > <pxe/tftp/server>.da.tftp:  45 RRQ "PXElinux.cfg/0A" octet tsize 0 blksize 1408
+10.0.254.247.49161 > <pxe/tftp/server>.da.tftp:  44 RRQ "PXElinux.cfg/0" octet tsize 0 blksize 1408
+10.0.254.247.49162 > <pxe/tftp/server>.da.tftp:  50 RRQ "PXElinux.cfg/default" octet tsize 0 blksize 1408
+</code></pre>
+
+<p>PXE is looking for entries that match itself.  So PXE thinks it is:</p>
+<pre><code>53d19f64-d663-a017-8922-00304860f3ca
+01-00-30-48-60-f3-ca
+0A00FEF7
+0A00FEF
+0A00FE
+0A00F
+0A00
+0A0
+0A
+0
+default
+</code></pre>
+<p>If you look in &#39;/var/tftp/PXElinux.cfg&#39; you see this:</p>
+<pre><code>&lt;me&gt;@&lt;pxe&#47;tftp&#47;server&gt;:&#47;var&#47;tftp&#47;PXElinux.cfg# ls -al
+-rw-r--r--  1 &lt;me&gt; &lt;me&gt; 1833 May  6 16:58 default
+-rw-r--r--  1 &lt;me&gt; &lt;me&gt; 1833 May  6 16:58 reinstall
+</code></pre>
+<p>This means PXE found the default correctly but I wanted it to find another profile</p>
+<h4>Create a new match:</h4><pre><code>ln -s reinstall 01-00-30-48-60-f3-ca
+
+&lt;me&gt;@&lt;pxe&#47;tftp&#47;server&gt;:&#47;var&#47;tftp&#47;PXElinux.cfg# ls -al
+lrwxrwxrwx  1 &lt;me&gt; &lt;me&gt;    9 May 24 15:02 01-00-30-48-60-f3-ca -&gt; reinstall
+-rw-r--r--  1 &lt;me&gt; &lt;me&gt;  166 May  6 16:58 unattended
+-rw-r--r--  1 &lt;me&gt; &lt;me&gt; 1833 May  6 16:58 reinstall
+</code></pre>
+<p>Now I have a match for my PXE host to find that has non-default instructions.  An unattended install.</p>
+<h4>Verify TFTP got the changes</h4>
+<pre><code>
+<me>@<pxe/tftp/server>:~# tcpdump port 69
+lab01.da.2070 > <pxe/tftp/server>.da.tftp:  27 RRQ "PXElinux.0" octet tsize 0
+lab01.da.2071 > <pxe/tftp/server>.da.tftp:  32 RRQ "PXElinux.0" octet blksize 1456
+lab01.da.49152 > <pxe/tftp/server>.da.tftp:  79 RRQ "PXElinux.cfg/53d19f64-d663-a017-8922-00304860f3ca" octet tsize 0 blksize 1408
+lab01.da.49153 > <pxe/tftp/server>.da.tftp:  63 RRQ "PXElinux.cfg/01-00-30-48-60-f3-ca" octet tsize 0 blksize 1408
+lab01.da.49154 > <pxe/tftp/server>.da.tftp:  35 RRQ "linux" octet tsize 0 blksize 1408
+IP lab01.da.49155 > <pxe/tftp/server>.da.tftp:  39 RRQ "initrd.gz" octet tsize 0 blksize 1408
+</code></pre>
+
+<p>PXE has now matched and my host is reinstalling.</p>
+<h4>Reference:</h4>
+<p><a href="http://wiki.debian.org/PXEBootInstall">pxe debian wiki</a><br>
+<a href="http://www.debian.org/releases/stable/i386/ch04s05.html.en">relase info</a><br>
+<a href="http://andys.org.uk/bits/2010/03/22/pxe-booting-a-debian-squeeze-install/">howto</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

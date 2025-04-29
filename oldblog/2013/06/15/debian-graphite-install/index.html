@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>debian graphite install &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>debian graphite install</h1>
+            <h2>Saturday, June 15, 2013 <span>&raquo;</span> <a href="/tags/graphite/">graphite</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Basic graphite install.</p>
+<h4>Installs</h4>
+<pre><code>
+aptitude update
+apt-get install -y python2.6 \
+                   python-pip \
+                   python-cairo \
+                   python-django \
+                   python-django-tagging \
+                   libapache2-mod-wsgi \
+                   python-twisted \
+                   python-memcache \
+                   python-pysqlite2 \
+                   python-simplejson \
+                   apache2 \
+                   libapache2-mod-wsgi
+</code></pre>
+
+<pre><code>
+pip install whisper
+pip install carbon
+pip install graphite-web
+</code></pre>
+
+<pre><code>
+wget https://raw.github.com/tmm1/graphite/master/examples/example-graphite-vhost.conf \
+     -O /etc/apache2/sites-available/graphite
+nano /etc/apache2/sites-available/graphite
+</code></pre>
+<h4>Example:</h4>
+<pre><code>
+WSGISocketPrefix /var/run/apache2/wsgi
+
+ServerName <your_server_url>
+DocumentRoot "/opt/graphite/webapp"
+
+#Allow our external dashboards, etc queries
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, OPTIONS"
+Header set Access-Control-Allow-Headers "origin, authorization, accept"
+
+# I've found that an equal number of processes & threads tends
+# to show the best performance for Graphite (ymmv).
+WSGIDaemonProcess graphite processes=5 threads=5 display-name='%{GROUP}' inactivity-timeout=120
+WSGIProcessGroup graphite
+WSGIApplicationGroup %{GLOBAL}
+WSGIImportScript /opt/graphite/conf/graphite.wsgi process-group=graphite application-group=%{GLOBAL}
+
+WSGIScriptAlias / /opt/graphite/conf/graphite.wsgi 
+
+#require radius for any access
+<Location />
+    AuthType Basic
+    AuthName "Graphite auth"
+    #SETUP YOUR AUTH HERE
+</Location>
+
+Alias /content/ /opt/graphite/webapp/content/
+<Location "/content/">
+    SetHandler None
+</Location>
+
+# XXX In order for the django admin site media to work you
+# must change @DJANGO_ROOT@ to be the path to your django
+# installation, which is probably something like:
+# /usr/lib/python2.6/site-packages/django
+Alias /media/ "@DJANGO_ROOT@/contrib/admin/media/"
+<Location "/media/">
+    SetHandler None
+</Location>
+
+# The graphite.wsgi file has to be accessible by apache. It won't
+# be visible to clients because of the DocumentRoot though.
+<Directory /opt/graphite/conf/>
+    Order deny,allow
+    Allow from all
+</Directory>
+</code></pre>
+
+<pre><code>
+cd /opt/graphite/conf/
+cp graphite.wsgi.example graphite.wsgi
+cp carbon.conf.example carbon.conf
+cp storage-schemas.conf.example storage-schemas.conf
+</code></pre>
+<h4>Setup django db</h4><pre><code>cd &#47;opt&#47;graphite&#47;webapp&#47;graphite
+python manage.py syncdb
+</code></pre><h4>Looks Like</h4>
+<p><a href="javascript:toggleDiv('hideme');">Show Output</a></p>
+
+<div id="hideme" style="display:none;">
+<pre><code>
+Could not import graphite.local_settings, using defaults!
+Could not import graphite.local_settings, using defaults!
+Creating table account_profile
+Creating table account_variable
+Creating table account_view
+Creating table account_window
+Creating table account_mygraph
+Creating table dashboard_dashboard_owners
+Creating table dashboard_dashboard
+Creating table events_event
+Creating table auth_permission
+Creating table auth_group_permissions
+Creating table auth_group
+Creating table auth_user_user_permissions
+Creating table auth_user_groups
+Creating table auth_user
+Creating table auth_message
+Creating table django_session
+Creating table django_admin_log
+Creating table django_content_type
+Creating table tagging_tag
+Creating table tagging_taggeditem
+
+You just installed Django's auth system, which means you don't have any superusers defined.
+Would you like to create one now? (yes/no): yes
+Username (Leave blank to use 'root'): 
+E-mail address: 
+Error: That e-mail address is invalid.
+E-mail address: root@localhost.com
+Password: 
+Password (again): 
+Superuser created successfully.
+Installing index for account.Variable model
+Installing index for account.View model
+Installing index for account.Window model
+Installing index for account.MyGraph model
+Installing index for dashboard.Dashboard_owners model
+Installing index for auth.Permission model
+Installing index for auth.Group_permissions model
+Installing index for auth.User_user_permissions model
+Installing index for auth.User_groups model
+Installing index for auth.Message model
+Installing index for admin.LogEntry model
+Installing index for tagging.TaggedItem model
+No fixtures found.
+</code></pre>
+</div>
+<h4>Enable site in Apache</h4><pre><code>a2dissite default
+a2ensite graphite
+sudo chmod -R a+w &#47;opt&#47;graphite&#47;storage
+</code></pre><h4>Start things</h4><pre><code>&#47;opt&#47;graphite&#47;bin&#47;carbon-cache.py start
+&#47;etc&#47;init.d&#47;apache2 restart
+</code></pre><h4>Notes</h4>
+<p>Logs are located here: /opt/graphite/storage/log/webapp/</p>
+<h4>Reference</h4>
+<p><a href="http://greenlegos.wordpress.com/2012/09/09/graphite-installation/">graphite install doc</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

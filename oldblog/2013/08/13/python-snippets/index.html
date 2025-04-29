@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>python snippets &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>python snippets</h1>
+            <h2>Tuesday, August 13, 2013 <span>&raquo;</span> <a href="/tags/python/">python</a>, <a href="/tags/snippets/">snippets</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>I recently found these snippets to be useful.</p>
+<h4>Invoke garbage collection manually</h4><pre><code>import gc
+gc.collect()
+</code></pre>
+<p><a href="http://effbot.org/pyfaq/how-does-python-manage-memory.htm">How does python manage memory?</a><br>
+<a href="http://pymotw.com/2/gc/">MOTW</a></p>
+<h4>Less style output from python</h4><pre><code>import pydoc
+pydoc.pager(&#39;string&#39;)
+</code></pre>
+<p><a href="http://docs.python.org/2/library/pydoc.html">docs</a><br>
+<a href="http://www.onlamp.com/pub/a/python/2001/04/18/pydoc.html">oreilly info</a></p>
+<h4>Basic use of multiprocessing pool.map</h4>
+<pre><code>
+import time
+from multiprocessing import Pool
+
+def f(x):
+    print time.time()
+    time.sleep(1)
+    print time.time()
+
+def main():
+    #four simultaneious workers
+    pool = Pool(processes=4)
+    print pool.map(f, range(10))
+
+if __name__ == '__main__':
+    main()
+</code></pre>
+
+<p>Demonstrates 4 concurrent subprocesses happening, each with their own GIL</p>
+
+<pre><code>
+377232079.27
+1377232079.27
+1377232079.27
+1377232079.27
+1377232080.27
+1377232080.27
+1377232080.27
+1377232080.27
+1377232080.27
+1377232080.27
+1377232080.27
+1377232080.27
+1377232081.27
+1377232081.27
+1377232081.28
+1377232081.28
+1377232081.28
+1377232081.28
+1377232082.28
+1377232082.28
+[None, None, None, None, None, None, None, None, None, None]
+</code></pre>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

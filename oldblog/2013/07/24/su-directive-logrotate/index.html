@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>su directive logrotate &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>su directive logrotate</h1>
+            <h2>Wednesday, July 24, 2013 <span>&raquo;</span> <a href="/tags/debian/">debian</a>, <a href="/tags/logrotate/">logrotate</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>If the parent directory for logging is world writable and not owned by root logrotate needs to know what user should be used to rotate.</p>
+<h4>Log Dir</h4>
+<pre><code>
+me@vm#ls -al /var/log/myapp/
+total 1728
+drwxrwxrwx  2 appuser appuser   4096 Jul 24 13:45 .
+</code></pre>
+<h4>My logrotate:</h4>
+<pre><code>
+/var/log/myapp/*.log {
+
+    weekly
+    rotate 4
+    compress
+
+    delaycompress
+    missingok
+    create 644 appuser appuser
+}
+</code></pre>
+<h4>Manual logrotate</h4><pre><code>&#47;usr&#47;sbin&#47;logrotate --verbose &#47;etc&#47;logrotate.conf
+</code></pre><h4>Looks Like</h4>
+<pre><code>
+rotating pattern: /var/log/myapp/*.log  weekly (4 rotations)
+empty log files are rotated, old logs are removed
+considering log /var/log/myapp/default.log
+
+error: skipping "/var/log/myapp/default.log" because parent directory has insecure permissions
+(It's world writable or writable by group which is not "root") Set "su" directive in 
+config file to tell logrotate which user/group should be used for rotation
+</code></pre>
+<h4>Telling logrotate to do the &#39;right thing&#39;</h4>
+<pre><code>
+/var/log/myapp/*.log {
+    su appuser appuser #<--NEW
+    weekly
+    rotate 4
+    compress
+
+    delaycompress
+    missingok
+    create 644 appuser appuser
+}
+</code></pre>
+<h4>Manually running logrotate post fix</h4>
+<pre><code>
+rotating pattern: /var/log/myapp/*.log  weekly (4 rotations)
+empty log files are rotated, old logs are removed
+switching euid to 108 and egid to 108
+considering log /var/log/myapp/default.log
+  log needs rotating
+</code></pre>
+<h4>Other solution</h4>
+<p>Depending on why you need the above permissions on your log directory.  This<br>
+may not be the way to go.  But if you can less permissive is always better.</p>
+<pre><code>chmod 0640 &#47;var&#47;log&#47;myapp&#47;
+</code></pre><h4>Reference</h4>
+<p><a href="http://linux.die.net/man/8/logrotate">logrotate man</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

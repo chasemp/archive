@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>IOS granular permissions &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>IOS granular permissions</h1>
+            <h2>Wednesday, April 03, 2013 <span>&raquo;</span> <a href="/tags/cisco/">cisco</a>, <a href="/tags/IOS/">IOS</a>, <a href="/tags/security/">security</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>If you have tiered levels of administrators, or you want to create an account for automation purposes best practice is to define a custom security level in IOS.</p>
+
+<p>Levels 1 and 15 are defined by default.</p>
+<h4>Allowing lower levels to see your configuration: IOS</h4><pre><code>conf t
+username backup privilege 3 secret &lt;SECRET&gt;
+privilege exec level 3 show startup-config
+privilege exec level 3 show
+wr mem
+</code></pre><h4>Allowing lower levels to see your configuration: FreeRADIUS:</h4>
+<p>/etc/freeradius/users</p>
+
+<pre><code>
+backup
+    Service-Type = NAS-Prompt-User,
+    cisco-avpair = "shell:priv-lvl=3",
+    Auth-Type = System,
+</code></pre>
+<h4>Looks Like</h4>
+<pre><code>
+cisco#show start
+Building configuration...
+
+--CONFIGURATION--
+end
+</code></pre>
+<h4>Defining the next user tier for NAT information: IOS</h4><pre><code>conf t
+username natinfo privilege 4 secret &lt;SECRET&gt;
+privilege exec level 4 show nat64 statistics
+wr mem
+</code></pre><h4>Defining the next user tier for NAT information: FreeRADIUS</h4>
+<pre><code>
+natinfo
+    Service-Type = NAS-Prompt-User,
+    cisco-avpair = "shell:priv-lvl=4",
+    Auth-Type = System,
+</code></pre>
+<h4>Looks Like</h4><pre><code>cisco#show ip nat statistics
+--STATS--
+</code></pre><h4>NOTES</h4>
+<ul>
+<li>Permissions stack up which means a user at Level 4 can also issue &#39;show startup-configuration&#39;</li>
+<li>&#39;show running-config&#39; command does not work in this way for the IOS devices I have tried.<br></li>
+</ul>
+
+<p>This does not work how you think it does:</p>
+<pre><code>privilege exec level 3 show running-config
+</code></pre><h4>Reference</h4>
+<p><a href="http://www.techrepublic.com/article/understand-the-levels-of-privilege-in-the-cisco-ios/">tech republic cisco priv doc</a><br>
+<a href="http://www.cisco.com/en/US/docs/ios/12_2/security/configuration/guide/scfpass.html">cisco sec guide</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

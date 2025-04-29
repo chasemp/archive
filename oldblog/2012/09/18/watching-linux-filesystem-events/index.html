@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>watching linux filesystem events &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>watching linux filesystem events</h1>
+            <h2>Tuesday, September 18, 2012 <span>&raquo;</span> <a href="/tags/inotify/">inotify</a>, <a href="/tags/linux/">linux</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>When you need to watch file system events efficiently.</p>
+<h4>Install user land tools:</h4><pre><code>aptitude install inotify-tools
+</code></pre><h4>Waiting for a delete</h4>
+<p>This waits for a file to be deleted and then echo&#39;s:</p>
+<pre><code>#!&#47;bin&#47;bash
+inotifywait -e delete_self .&#47;hi&#47;yes  &amp;&amp; echo &quot;gone&quot;
+</code></pre><h4>Waiting for a create</h4>
+<p>This watches for files created in a directory and then echo&#39;s.  This<br>
+is more appropriately done with the -m option in real life:</p>
+<pre><code>#!&#47;bin&#47;bash
+while true; do
+
+inotifywait -e create .&#47;hi  &amp;&amp; echo &quot;yo&quot;
+done
+</code></pre><h3>Watching for changes in /home</h3>
+<pre><code>
+#!/bin/bash
+while true; do
+    touch /var/log/changes
+    inotifywait -r -e create "/home" |
+    while read filename eventlist eventfile
+    do
+        echo "see new $eventfile"
+        echo "creation $eventfile" >> /var/log/changes
+    done
+done
+</code></pre>
+<h4>Reference:</h4>
+<p><a href="http://www.infoq.com/articles/inotify-linux-file-system-event-monitoring">inotify article</a><br>
+<a href="http://pyinotify.sourceforge.net/">pyinotify libs</a><br>
+<a href="http://www.ibm.com/developerworks/library/l-inotify/">IBM docs</a><br>
+<a href="http://blog.lagentz.com/general/automate-your-shell-scripts-using-inotify-and-inotifywait/">shell script article</a><br>
+<a href="http://linux.die.net/man/1/inotifywait">inotifywait man</a><br>
+<a href="https://github.com/splitbrain/Watcher">Python Watch Script</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

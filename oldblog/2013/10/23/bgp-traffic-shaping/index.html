@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>bgp traffic shaping &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>bgp traffic shaping</h1>
+            <h2>Wednesday, October 23, 2013 <span>&raquo;</span> <a href="/tags/bgp/">bgp</a>, <a href="/tags/cisco/">cisco</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Traffic engineering in BGP is probably the most common problem encountered.  This is not intended to be a complete primer on it, just a few thoughts.</p>
+<h4>BGP Selection process (cisco oriented) in my shorthand:</h4>
+<ul>
+<li>prefer path with highest WEIGHT (local to the router)</li>
+<li>prefer path with hight LOCAL_PREF (usually local to an AS)</li>
+<li>prefer locally originated (network statement, aggregate BGP, or IGP source)</li>
+<li>prefer the path with the shortest AS_PATH (unless &#39;bestpath as-path ignore&#39;)</li>
+<li>prefer the path with the lowest origin type (ex. IGP is lower than EGP)</li>
+<li>prefer the path with the lowest multi-exit discriminator (MED value)
+&ndash; first AS must be the same for this to matter unless &#39;bgp always-compare-med&#39;
+&ndash; no med means med is 0 unless &#39;bgp bestpath med missing-as-worst&#39;
+&ndash; bgp deterministic-med command can change this</li>
+<li>prefer eBGP over iBGP paths.</li>
+<li>prefer the path with the lowest IGP metric to the BGP next hop (continue on even if bestpath is already selected)</li>
+<li>determine if multiple paths require installation in the routing table for BGP Multipath</li>
+<li>when both paths are external, prefer the path that was received first (the oldest one).</li>
+<li>Prefer the route that comes from the BGP router with the lowest router ID (bgp router-id or highest IP)</li>
+<li>if the originator or router ID is the same for multiple paths, prefer the path with the minimum cluster list length.</li>
+<li>prefer the path that comes from the lowest neighbor address.</li>
+</ul>
+
+<p>I am going to look at two scenarios: one for inbound and one for outbound traffic.</p>
+<h4>Starting Configuration</h4>
+<p>Our starting boiler plate configuration using a private AS.</p>
+
+<pre><code>
+router bgp 64512
+ bgp router-id 192.168.1.3
+ no bgp fast-external-fallover
+ bgp log-neighbor-changes
+ bgp graceful-restart restart-time 120
+ bgp graceful-restart stalepath-time 360
+ bgp graceful-restart
+ bgp maxas-limit 200
+ no bgp default ipv4-unicast
+ neighbor 192.168.2.2 remote-as 64513
+ neighbor 192.168.2.2 description NEIGHBORONE
+ neighbor 192.168.2.2 version 4
+ neighbor 192.168.3.2 remote-as 64514
+ neighbor 192.168.3.2 description NEIGHBORTWO
+ neighbor 192.168.3.2 version 4
+ !
+ address-family ipv4
+  neighbor 192.168.2.2 activate
+  neighbor 192.168.2.2 soft-reconfiguration inbound
+  neighbor 192.168.3.2 activate
+  neighbor 192.168.3.2 soft-reconfiguration inbound
+ exit-address-family
+ !
+ip bgp-community new-format
+</code></pre>
+
+<p>When it comes to influencing outbound traffic Weight on a Cisco device can be the simplest option.  It is also heavy handed since it overrides native BGP best path selection.  In-bound traffic shapping on the other hand solely using BGP is a strange beast as no matter how many times you prepend your AS for an ISP it is still possible for it to be chosen.  The best you can do, is the best you can do.  If you really need a dark link your options are to not advertise BGP or redirect traffic at other points in the process.</p>
+<h4>prepending to shape inbound traffic</h4>
+<p>Using prepend to artificially inflate your route path via one ISP.</p>
+
+<pre><code>
+!
+!5 is a pretty reasonable prepend starting point
+route-map PREPEND_FIVE permit 10
+ set as-path prepend 64512 64512 64512 64512 64512
+!         
+router bgp 64512
+ !
+ address-family ipv4
+  !
+  !prepend your AS as you send out your advert
+  neighbor 192.168.3.2 route-map PREPEND_FIVE out
+  !
+  end
+ !
+!reestablish your relationship nicely
+clear ip bgp 192.168.3.2 soft out
+</code></pre>
+<h4>using a tie breaker to influence outbound traffic</h4>
+<p>There are a few ways to do this, but this being really explicit is nice for demonstration.  Basically, we are giving all path length ties that match a regex to ISP1.  This can be tweaked depending on how favorable one ISP may be over another by assigning more or fewer tie breakers.  This is a nice to way to balance outbound as it still allows for optimum BGP route selection in most cases while influencing the utilization of your links in a deterministic way.</p>
+
+<pre><code>
+!
+!match AS-PATHS ending in 0-5
+ip as-path access-list 1 permit [0-5]$
+!
+!set up route map to assign LOW metric to matching as-paths to ISP1
+route-map NEIGHBORTWO-in permit 10
+ match as-path 1
+ set metric 10
+!
+!set up route map to assign HIGH metric to matching as-paths to ISP1
+route-map NEIGHBORTWO-in permit 20
+ set metric 20
+!         
+!set up route map to assign HIGH metric to matching as-paths to ISP2
+route-map NEIGHBORONE-in permit 10
+ match as-path 1
+ set metric 20
+!         
+!set up route map to assign LOW metric to matching as-paths to ISP2
+route-map NEIGHBORONE-in permit 20
+ set metric 10
+!
+router bgp 64512
+ !
+ bgp always-compare-med
+ !
+ address-family ipv4
+  neighbor 192.168.2.2 route-map NEIGHBORONE-in in
+  neighbor 192.168.3.2 route-map NEIGHBORTWO-in in
+ !
+ end
+ !
+wr mem
+!
+</code></pre>
+
+<p>Distribute your outbound ties to get more use out of a less preferable ISP link:</p>
+
+<pre><code>
+*> 1.0.0.0/24       192.168.2.2          10             0 64513 15169 i
+*                   192.168.3.2           20             0 64514 2828 15169 i
+*  1.0.4.0/24       192.168.2.2          20             0 64513 2828 7545 56203 i
+*>                  192.168.3.2           10             0 64514 2828 7545 56203 i
+*  1.0.5.0/24       192.168.2.2          20             0 64513 2828 7545 56203 i
+*>                  192.168.3.2           10             0 64514 2828 7545 56203 i
+*  1.0.6.0/24       192.168.2.2          20             0 64513 2828 4826 38803 56203 i
+*>                  192.168.3.2           10             0 64514 2828 4826 38803 56203 i
+</code></pre>
+
+<p>The better ISP still wins when Path is the deciding factor:</p>
+
+<pre><code>
+*> 1.0.20.0/23      192.168.2.2          10             0 64513 2519 i
+*                   192.168.3.2           20             0 64514 2828 2516 2519 i
+
+*> 1.0.26.0/23      192.168.2.2          10             0 64513 2519 i
+*                   192.168.3.2           20             0 64514 2828 2516 2519 i
+</code></pre>
+<h4>Reference</h4>
+<p><a href="http://www.cisco.com/en/US/tech/tk365/technologies_tech_note09186a0080094431.shtml">bgp path selection</a><br>
+<a href="http://www.cisco.com/en/US/tech/tk365/technologies_tech_note09186a0080094934.shtml">using med well</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

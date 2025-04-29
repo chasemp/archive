@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>asa hairpinning &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>asa hairpinning</h1>
+            <h2>Tuesday, August 20, 2013 <span>&raquo;</span> <a href="/tags/asa/">asa</a>, <a href="/tags/cisco/">cisco</a>, <a href="/tags/hairpinning/">hairpinning</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Hairpinning is when you exit a firewall on the via on the same interface you terminate a VPN.  Essentially, you usually establish a dynamic tunnel on the external interface and that same external interface has L2L tunnels established that you need to go over.  Hairpinning is making a U-Turn.</p>
+<h4>Diagram</h4>
+<p><img src="/assets/images/hairpinning.png" alt="hairpinning"></p>
+<h4>Making sure my RA VPN users get the route</h4>
+<p>I am adding the network for FW2 to the split tunnel ACL on FW1.</p>
+<pre><code>FW1(config)# access-list SPLITTUN standard permit 10.10.0.0 255.255.0.0  
+</code></pre><h4>Making sure traffic that comes in the outside interface and leave it</h4><pre><code>FW1(config)#same-security-traffic permit intra-interface
+</code></pre><h4>Making sure NAT is handled</h4>
+<p>In my case I want to exclude NAT for these hosts as it is not required.</p>
+
+<pre><code>
+nat (Outside,Outside) source static NETWORK_OBJ_10.0.16.0/24 \
+                             NETWORK_OBJ_10.0.16.0/24 \
+                             destination static FW2_HOSTS_10.10.0.0_24 \
+                             FW2_HOSTS_10.10.0.0_24
+</code></pre>
+
+<p>Notice that <em>(Outside, Outside)</em> for hairpinning.</p>
+<h4>packet tracer</h4>
+<p>Showing the traffic flow.</p>
+<pre><code>FW1(config)# packet-tracer input outside tcp 10.0.16.70 http 10.10.0.4 http
+</code></pre>
+<p><a href="javascript:toggleDiv('hideme');">Show packet-tracer</a><br>
+<div id="hideme" style="display:none;"><br>
+<pre><code><br>
+Phase: 1<br>
+Type: ACCESS-LIST<br>
+Subtype: log<br>
+Result: ALLOW<br>
+Config:<br>
+access-group Outside_access_in in interface Outside<br>
+access-list Outside_access_in extended permit tcp any any eq www <br>
+Additional Information:<br>
+ Forward Flow based lookup yields rule:<br>
+ in  id=0xacdc0680, priority=13, domain=permit, deny=false<br>
+    hits=626508, user_data=0xa90df480, cs_id=0x0, use_real_addr, flags=0x0, protocol=6<br>
+    src ip/id=0.0.0.0, mask=0.0.0.0, port=0<br>
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=80, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=any</p>
+
+<p>Phase: 2<br>
+Type: IP-OPTIONS<br>
+Subtype: <br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Forward Flow based lookup yields rule:<br>
+ in  id=0xacc20be8, priority=0, domain=inspect-ip-options, deny=true<br>
+    hits=7983735, user_data=0x0, cs_id=0x0, reverse, flags=0x0, protocol=0<br>
+        src ip/id=0.0.0.0, mask=0.0.0.0, port=0<br>
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=any</p>
+
+<p>Phase: 3<br>
+Type: CP-PUNT<br>
+Subtype: <br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Forward Flow based lookup yields rule:<br>
+ in  id=0xad356ee0, priority=89, domain=punt, deny=true<br>
+    hits=89, user_data=0xac768378, cs_id=0x0, flags=0x0, protocol=0<br>
+    src ip/id=10.0.16.70, mask=255.255.255.255, port=0<br>
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=any</p>
+
+<p>Phase: 4<br>
+Type: ACCESS-LIST<br>
+Subtype: vpn-user<br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Forward Flow based lookup yields rule:<br>
+ in  id=0xadb9fea8, priority=13, domain=vpn-user, deny=false<br>
+    hits=22, user_data=0xa90dd600, filter_id=0xa(RACL-ADMIN), protocol=0<br>
+    src ip=0.0.0.0, mask=0.0.0.0, port=0<br>
+    dst ip=0.0.0.0, mask=0.0.0.0, port=0</p>
+
+<p>Phase: 5<br>
+Type: VPN<br>
+Subtype: ipsec-tunnel-flow<br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Forward Flow based lookup yields rule:<br>
+ in  id=0xadba0308, priority=69, domain=ipsec-tunnel-flow, deny=false<br>
+    hits=89, user_data=0xd93c504, cs_id=0x0, reverse, flags=0x0, protocol=0<br>
+    src ip/id=10.0.16.70, mask=255.255.255.255, port=0<br>
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=any</p>
+
+<p>Phase: 6<br>
+Type: FOVER<br>
+Subtype: standby-update<br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Forward Flow based lookup yields rule:<br>
+ in  id=0xacd15e28, priority=20, domain=lu, deny=false<br>
+    hits=2767281, user_data=0x0, cs_id=0x0, flags=0x0, protocol=6<br>
+    src ip/id=0.0.0.0, mask=0.0.0.0, port=0<br>
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=any</p>
+
+<p>Phase: 7<br>
+Type: NAT<br>
+Subtype: <br>
+Result: ALLOW<br>
+Config:<br>
+nat (Outside,Outside) source static NETWORK_OBJ_10.0.16.0/24 \<br>
+                                    NETWORK_OBJ_10.0.16.0/24 \<br>
+                                    destination static FW2_HOSTS_10.10.0.0_24 \<br>
+                                    FW2_HOSTS_10.10.0.0_24<br>
+Additional Information:<br>
+Static translate 10.0.16.70/80 to 10.0.16.70/80<br>
+ Forward Flow based lookup yields rule:<br>
+ in  id=0xad3af9c0, priority=6, domain=nat, deny=false<br>
+    hits=422, user_data=0xadc36ad0, cs_id=0x0, use_real_addr, flags=0x0, protocol=0<br>
+    src ip/id=10.1.6.0, mask=255.255.255.0, port=0<br>
+    dst ip/id=10.2.1.0, mask=255.255.255.0, port=0, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=Outside</p>
+
+<p>Phase: 8<br>
+Type: VPN<br>
+Subtype: encrypt<br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Forward Flow based lookup yields rule:<br>
+ out id=0xad379f08, priority=70, domain=encrypt, deny=false<br>
+    hits=2, user_data=0xd94f6c4, cs_id=0xacdbae48, reverse, flags=0x0, protocol=0<br>
+    src ip/id=10.1.0.0, mask=255.255.0.0, port=0<br>
+    dst ip/id=10.2.1.0, mask=255.255.255.0, port=0, dscp=0x0<br>
+    input_ifc=any, output_ifc=Outside</p>
+
+<p>Phase: 9<br>
+Type: VPN<br>
+Subtype: ipsec-tunnel-flow<br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Reverse Flow based lookup yields rule:<br>
+ in  id=0xac882b98, priority=69, domain=ipsec-tunnel-flow, deny=false<br>
+    hits=2, user_data=0xd950a5c, cs_id=0x0, reverse, flags=0x0, protocol=0<br>
+    src ip/id=10.2.1.0, mask=255.255.255.0, port=0<br>
+    dst ip/id=10.1.0.0, mask=255.255.0.0, port=0, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=any</p>
+
+<p>Phase: 10<br><br>
+Type: IP-OPTIONS<br>
+Subtype: <br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Reverse Flow based lookup yields rule:<br>
+ in  id=0xacc20be8, priority=0, domain=inspect-ip-options, deny=true<br>
+    hits=7983737, user_data=0x0, cs_id=0x0, reverse, flags=0x0, protocol=0<br>
+    src ip/id=0.0.0.0, mask=0.0.0.0, port=0<br>
+    dst ip/id=0.0.0.0, mask=0.0.0.0, port=0, dscp=0x0<br>
+    input_ifc=Outside, output_ifc=any</p>
+
+<p>Phase: 11<br>
+Type: VPN<br>
+Subtype: encrypt<br>
+Result: ALLOW<br>
+Config:<br>
+Additional Information:<br>
+ Reverse Flow based lookup yields rule:<br>
+ out id=0xae4af120, priority=70, domain=encrypt, deny=false<br>
+    hits=88, user_data=0xd93b30c, cs_id=0x0, reverse, flags=0x0, protocol=0<br>
+    src ip/id=0.0.0.0, mask=0.0.0.0, port=0<br>
+    dst ip/id=10.0.16.70, mask=255.255.255.255, port=0, dscp=0x0<br>
+        input_ifc=any, output_ifc=Outside</p>
+
+<p>Result:<br>
+input-interface: Outside<br>
+input-status: up<br>
+input-line-status: up<br>
+Action: allow<br>
+</code></pre><br>
+</div></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>making debs with rake &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>making debs with rake</h1>
+            <h2>Friday, July 12, 2013 <span>&raquo;</span> <a href="/tags/debian/">debian</a>, <a href="/tags/rake/">rake</a>, <a href="/tags/ruby/">ruby</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Some Rake files have built in logic to make a debian binary. </p>
+<h4>Mcollective</h4>
+<p>A good example:</p>
+<pre><code>git clone https:&#47;&#47;github.com&#47;puppetlabs&#47;marionette-collective
+cd marionette-collective&#47;
+</code></pre><h4>Getting Packages</h4><pre><code>aptitude install rake \
+build-essential 
+rubygem \
+pdebuild-cross \
+devscripts \
+fakeroot \
+dpatch
+</code></pre><h4>Making Debian Package</h4>
+<p>rake deb</p>
+<h4>Looks Like</h4>
+<pre><code>
+rm -r build
+rm -r doc
+Parsing sources...
+
+<omitted>
+
+dpkg-deb: building package `mcollective' in `../mcollective_2.3.2-1_all.deb'.
+dh_gencontrol -pmcollective-client  
+dpkg-gencontrol: warning: File::FcntlLock not available; using flock which is not NFS-safe
+dh_md5sums -pmcollective-client 
+dh_builddeb -pmcollective-client 
+dpkg-deb: building package `mcollective-client' in `../mcollective-client_2.3.2-1_all.deb'.
+dh_gencontrol -pmcollective-common  
+dpkg-gencontrol: warning: File::FcntlLock not available; using flock which is not NFS-safe
+dh_md5sums -pmcollective-common 
+dh_builddeb -pmcollective-common 
+dpkg-deb: building package `mcollective-common' in `../mcollective-common_2.3.2-1_all.deb'.
+dh_gencontrol -pmcollective-doc  
+dpkg-gencontrol: warning: File::FcntlLock not available; using flock which is not NFS-safe
+dh_md5sums -pmcollective-doc 
+dh_builddeb -pmcollective-doc 
+dpkg-deb: building package `mcollective-doc' in `../mcollective-doc_2.3.2-1_all.deb'.
+ dpkg-genchanges  >../mcollective_2.3.2-1_amd64.changes
+dpkg-genchanges: including full source code in upload
+ dpkg-source -i --after-build mcollective-2.3.2
+dpkg-buildpackage: full upload (original source is included)
+</code></pre>
+<h4>Normal install</h4><pre><code>dpkg -i mcollective_2.3.2-1_all.deb
+</code></pre>
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

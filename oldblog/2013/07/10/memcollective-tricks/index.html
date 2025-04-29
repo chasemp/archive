@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>memcollective tricks &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>memcollective tricks</h1>
+            <h2>Wednesday, July 10, 2013 <span>&raquo;</span> <a href="/tags/mcollective/">mcollective</a>, <a href="/tags/puppet/">puppet</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>mcollective-isms.  </p>
+<h4>Find all hosts</h4>
+<p>Create an shortcut</p>
+
+<p>/usr/local/bin/mc-find-hosts</p>
+
+<pre><code>
+#!/bin/bash
+if [ "$1" == "" ]; then
+    /usr/bin/mco find --wc mcollective
+else
+    /usr/bin/mco find $@
+
+</code></pre>
+<pre><code>mc-find-hosts
+</code></pre><h4>Find host by name matching</h4><pre><code>mc-find-hosts --with-id &#47;foo&#47;
+</code></pre><h4>Find hosts by puppet class</h4><pre><code>&#47;usr&#47;sbin&#47;mc-find-hosts --with-class &lt;class_name&gt; | sort
+</code></pre><h4>Query service status by class</h4><pre><code>mco service --with-class &#47;apache&#47; apache2 status
+</code></pre><h4>Getting stats about the service itself</h4><pre><code>mco rpc rpcutil daemon_stats
+</code></pre><h4>Restarting a service</h4><pre><code>mco service --with-identity &lt;host&gt; &lt;service&gt; restart
+</code></pre><h4>Find agents directory</h4><pre><code>sudo find &#47; -name rpcutil.ddl -exec dirname {} \;
+</code></pre><h4>Query a fact</h4><pre><code>mco facts &lt;fact_name&gt;
+</code></pre><h4>Query Puppet Status and get JSON in return</h4><pre><code>mco rpc puppet status -j
+</code></pre>
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

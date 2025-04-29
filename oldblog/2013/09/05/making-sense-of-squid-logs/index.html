@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>making sense of squid logs &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>making sense of squid logs</h1>
+            <h2>Thursday, September 05, 2013 <span>&raquo;</span> <a href="/tags/debian/">debian</a>, <a href="/tags/squid/">squid</a></h2>
+        </div>
+        
+        <div class="body">
+            <p>Squid defaults to logging things using epoch time.  Which can be a pain to decypher if you are in a hurry.</p>
+<pre><code>1378405786.009      0 127.0.0.1 TCP_DENIED&#47;400 1342 GET NONE:&#47;&#47; - NONE&#47;- text&#47;html
+</code></pre>
+<p>You see: <strong>1378405786.009</strong><br>
+It means: <strong>GMT: Thu, 05 Sep 2013 18:29:46 GMT</strong></p>
+
+<p>Years ago I wrote a <a href="https://raw.github.com/chasemp/archive/master/parse_squid.py">script</a> to handle this on-the-fly as I was looking for information I needed to pass an audit.  In a pinch, on an unfamiliar server, it works.  But it&#39;s not ideal.</p>
+
+<p>This configuration in /etc/squid/squid.conf makes timestamps natively sane:</p>
+<pre><code>logformat sanelogfrmt %tl.%03tu %6tr %&gt;a %Ss&#47;%03Hs %&lt;st %rm %ru %un %Sh&#47;%&lt;A %mt
+access_log &#47;var&#47;log&#47;squid&#47;access.log sanelogfrmt
+</code></pre>
+<p>Looks like:</p>
+<pre><code>05&#47;Sep&#47;2013:11:30:46 -0700      0 127.0.0.1 TCP_DENIED&#47;400 1342 \
+GET NONE:&#47;&#47; - NONE&#47;- text&#47;html
+</code></pre>
+<p>For a nice explaination of the fields in this log see the <a href="http://trafficserver.apache.org/docs/trunk/admin/working-log-files/log-formats.en.html">docs</a></p>
+
+<p>Some version of squid support the <strong>emulate_httpd_log on</strong> option as well.</p>
+
+<p><a href="http://wiki.squid-cache.org/Features/LogFormat">squid wiki</a><br>
+<a href="http://trafficserver.apache.org/docs/trunk/admin/working-log-files/log-formats.en.html">docs on format</a><br>
+<a href="http://devel.squid-cache.org/customlog/logformat.html">squid docs on log field options</a><br>
+<a href="http://answers.splunk.com/answers/13599/custom-squid-log-format">splunk doc</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

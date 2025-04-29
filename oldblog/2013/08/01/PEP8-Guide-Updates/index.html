@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>PEP8 Guide Updates &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>PEP8 Guide Updates</h1>
+            <h2>Thursday, August 01, 2013 <span>&raquo;</span> <a href="/tags/PEP8/">PEP8</a>, <a href="/tags/Python/">Python</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p><a href="http://www.python.org/dev/peps/pep-0008/">PEP8</a> is the &#39;official&#39; style guide for Python.  The idea being if the Python community can rally around a set of standards it makes the overall quality of code in the community better.  At least that&#39;s my idea.</p>
+
+<p>The guide has now been updated.  Here are some things I found notable.</p>
+<h4>Style Guide Exclusions</h4>
+<p>Then:</p>
+<pre><code>-Two good reasons to break a particular rule:
+
+-1. When applying the rule would make the code less readable, even for
+-   someone who is used to reading code that follows the rules.
+</code></pre>
+<p>Now:</p>
+<pre><code>+In particular: do not break backwards compatibility just to comply with
++this PEP!
+
++Some other good reasons to ignore a particular guideline:
++
++1. When applying the guideline would make the code less readable, even
++   for someone who is used to reading code that follows this PEP.
+
++3. Because the code in question predates the introduction of the
++   guideline and there is no other reason to be modifying that code.
++
++4. When the code needs to remain compatible with older versions of
++   Python that don&#39;t support the feature recommended by the style guide.
+</code></pre><h4>Line Characters</h4>
+<p>Then:</p>
+<pre><code>-Limit all lines to a maximum of 79 characters.
+</code></pre>
+<p>Now:</p>
+<pre><code>+Aim to limit all lines to a maximum of 79 characters, but up to 99
++characters is acceptable when it improves readability.
+
++For flowing long blocks of text with fewer structural restrictions
++(docstrings or comments), limiting the line length to 72 characters
++is recommended.
+</code></pre><h4>UTF-8 Is The Future</h4>
+<p>Then:</p>
+
+<pre><code>
+   -Code in the core Python distribution should always use the ASCII or
+   -Latin-1 encoding (a.k.a. ISO-8859-1).  For Python 3.0 and beyond,
+   -UTF-8 is preferred over Latin-1, see PEP 3120.
+</code></pre>
+
+<p>Now:</p>
+
+<pre><code>
+   +Code in the core Python distribution should always use UTF-8 (or ASCII
+   +in Python 2).
+
+   +  Note that in Python 3, ``unicode`` and ``basestring`` no longer exist
+   +  (there is only ``str``) and a bytes object is no longer a kind of
+   +  string (it is a sequence of integers instead)
+</code></pre>
+<h4>Relative vs. Absolute Imports</h4>
+<p>Then:</p>
+
+<pre><code>
+   - Relative imports for intra-package imports are highly discouraged.
+   -  Always use the absolute package path for all imports.  Even now that
+   -  PEP 328 is fully implemented in Python 2.5, its style of explicit
+   -  relative imports is actively discouraged; absolute imports are more
+   -  portable and usually more readable.
+</code></pre>
+
+<p>Now:</p>
+
+<pre><code>
+   + Absolute imports are recommended, as they are usually more readable
+   +  and tend to be better behaved (or at least give better error
+   +  messages) if the import system is incorrectly configured (such as
+   +  when a directory inside a package ends up on ``sys.path``)::
+   +
+   +    import mypkg.sibling
+   +    from mypkg import sibling
+   +    from mypkg.sibling import example
+   +
+   +  However, explicit relative imports are an acceptable alternative to
+   +  absolute imports, especially when dealing with complex package layouts
+   +  where using absolute imports would be unecessarily verbose::
+   +
+   +    from . import sibling
+   +    from .sibling import example
+</code></pre>
+<h4>Other Lessons Learned</h4>
+<ul>
+<li>Use &#39;def&#39; and not named lambda&#39;s</li>
+<li>Backwards compability is only expected for public interfaces</li>
+<li>Use &#39;&#39;.Join() over concatenation with performance and portablity in mind</li>
+<li>Use &#39;with&#39; statements with local resources.  try/finally is still ok.</li>
+<li>Don&#39;t break old code just to apply the style guide on principle.</li>
+<li>Python3.x does not allow mixing tabs and spaces</li>
+</ul>
+<h4>References</h4>
+<p><a href="http://hg.python.org/peps/rev/fb24c80e9afb">PEP8 Revision</a><br>
+<a href="http://hg.python.org/peps/file/fb24c80e9afb/pep-0008.txt">PEP8 Full</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

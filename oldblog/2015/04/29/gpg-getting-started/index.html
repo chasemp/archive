@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>gpg getting started &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>gpg getting started</h1>
+            <h2>Wednesday, April 29, 2015 <span>&raquo;</span> <a href="/tags/gpg/">gpg</a>, <a href="/tags/security/">security</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>I am regenerating my GPG key</p>
+
+<p>( This is not my actual key shown )</p>
+<h4>PGP</h4>
+<p><a href="https://en.wikipedia.org/wiki/Pretty_Good_Privacy">PGP</a> is an encryption standard.  GNU PG (GPG) is a common implementation.  GPG is<br>
+used to transmit items securely, verify the integrity of source material, or to<br>
+verify the identities of two parties.</p>
+
+<p>See reference for a download link and install a GPG implementation.</p>
+<h4>Generating a key pair</h4>
+<p>Options: RSA/RSA, 4096, Valid for a year or more (this can be updated later)</p>
+<pre><code>gpg --gen-key
+</code></pre>
+<pre><code>
+gpg (GnuPG/MacGPG2) 2.0.27; Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Please select what kind of key you want:
+   (1) RSA and RSA (default)
+   (2) DSA and Elgamal
+   (3) DSA (sign only)
+   (4) RSA (sign only)
+Your selection? 1
+RSA keys may be between 1024 and 8192 bits long.
+What keysize do you want? (2048) 4096
+Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+Key is valid for? (0)
+Key does not expire at all
+Is this correct? (y/N) y
+
+GnuPG needs to construct a user ID to identify your key.
+
+Real name: My Name
+Email address: me@email.com
+Comment: test key
+You selected this USER-ID:
+    "My Name (test key) <me@email.com>"
+
+Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit? O
+You need a Passphrase to protect your secret key.
+
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+gpg: key 9C6095EA marked as ultimately trusted
+public and secret key created and signed.
+
+gpg: checking the trustdb
+gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+gpg: depth: 0  valid:   3  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 3u
+gpg: next trustdb check due at 2016-04-29
+pub   4096R/9C6095EA 2015-04-29
+      Key fingerprint = B670 6F65 43A0 76A3 FAF7  42DF D7F9 EDD5 9C60 95EA
+uid       [ultimate] My Name (test key) <me@email.com>
+sub   4096R/9A8C2CA5 2015-04-29
+</code></pre>
+<h4>Show my key</h4><pre><code>gpg --list-key me@email.com
+
+pub   4096R&#47;9C6095EA 2015-04-29
+uid       [ultimate] My Name (test key) &lt;me@email.com&gt;
+sub   4096R&#47;9A8C2CA5 2015-04-29
+</code></pre>
+<p>This is my 32 bit identifier for this key: 9C6095EA.  Use the full fingerprint usually.</p>
+<pre><code>gpg --fingerprint 9C6095EA
+
+pub   4096R&#47;9C6095EA 2015-04-29
+    Key fingerprint = B670 6F65 43A0 76A3 FAF7  42DF D7F9 EDD5 9C60 95EA
+uid       [ultimate] My Name (test key) &lt;me@email.com&gt;
+sub    4096R&#47;9A8C2CA5 2015-04-29
+</code></pre>
+<p>This is your key fingerprint: </p>
+<pre><code>B670 6F65 43A0 76A3 FAF7  42DF D7F9 EDD5 9C60 95EA
+</code></pre><h4>Now we can publish our key for others to find</h4>
+<p>Make sure a keyserver pool is configured such as &#39;keyserver hkps://hkps.pool.sks-keyservers.net&#39;.</p>
+<pre><code>grep -E ^keyserver * | grep pool
+gpg.conf:keyserver hkps:&#47;&#47;hkps.pool.sks-keyservers.net
+</code></pre>
+<p>Upload your new key:</p>
+<pre><code>gpg --send-keys
+</code></pre>
+<p>Search for your new key (this may take a minute to propogate):</p>
+<pre><code>gpg  --search-keys &#39;test key&#39;
+</code></pre><h4>Finding keys for other people</h4><pre><code>gpg  --search-keys &#39;linus torvalds&#39;
+
+Linus Torvalds &lt;torvalds@linux-foundation.org&gt;
+2048 bit RSA key 00411886, created: 2011-09-20
+</code></pre><h4>Remove a key from the keyring (private key)</h4><pre><code>gpg --delete-secret-keys me@email.com
+
+gpg (GnuPG&#47;MacGPG2) 2.0.27; Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+sec  4096R&#47;9C6095EA 2015-04-29 My Name (test key) &lt;me@email.com&gt;
+
+Delete this key from the keyring? (y&#47;N) y
+This is a secret key! - really delete? (y&#47;N) y
+</code></pre><h4>Reference</h4>
+<p><a href="https://gnupg.org/download/index.html">download</a><br>
+<a href="https://sks-keyservers.net">key servers</a><br>
+<a href="https://evil32.com/">evil 32bit</a><br>
+<a href="https://en.wikipedia.org/wiki/Web_of_trust">web of trust</a><br>
+<a href="https://www.gnupg.org/gph/en/manual/x110.html">encrypt a file with gpg</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

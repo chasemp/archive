@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>IOS DDOS detection &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>IOS DDOS detection</h1>
+            <h2>Wednesday, June 05, 2013 <span>&raquo;</span> <a href="/tags/cisco/">cisco</a>, <a href="/tags/fw/">fw</a>, <a href="/tags/IOS/">IOS</a></h2>
+        </div>
+        
+        <div class="body">
+            <h3>Preamble</h3>
+<p>Basic DDOS detection and defense on IOS FW</p>
+<h4>Aliases</h4><pre><code>alias exec fstats show policy-firewall stats global
+alias exec zstats show policy-firewall stats zone
+</code></pre><h4>IOS Zone Based FW Config</h4>
+<p>Per Zone</p>
+<pre><code>conf t
+parameter-map type inspect-zone ddos-detection
+ !this is per _your_ hosts not source hosts
+ tcp syn-flood rate per-destination &lt;global_syn_flood_rate_limit_per_host&gt;&gt;
+ alert on
+ threat-detection basic-threat
+ !these alert limits should be changed to something reasonable for your environment
+ threat-detection rate syn-attack average-time-frame 600 average-threshold 100 burst-threshold 100
+ threat-detection rate inspect-drop average-time-frame 600 average-threshold 100 burst-threshold 100
+ threat-detection rate fw-drop average-time-frame 600 average-threshold 100 burst-threshold 100
+
+ !apply pmap to a zone
+ zone security ZONE_INTERNET
+  protection ddos-detection
+</code></pre>
+<p>Global</p>
+<pre><code>parameter-map type inspect global
+ !if you want a global sessions threshold
+ session total 3000000
+ !syn flood limit before going to syn cookies globally
+ per-box tcp syn-flood limit 10000
+ alert on
+ !aging out sessions aggressively to help prevent table blocking
+ per-box aggressive-aging high percent 85 low percent 65
+ per-box max-incomplete 100000 aggressive-aging high percent 85 low percent 60
+</code></pre><h4>Show Zone Stats</h4><pre><code>asr01#zstats
+Zone: ZONE_INTERNET
+Parameter-map: ddos-detection
+TCP SYN packet conform limit: 0
+TCP SYN packet exceed limit: 0
+Threat Detection Statistics:
+                        Average(eps)    Current(eps)    Threats Total Events
+10-min SYN attack:      0               0               0               0
+10-min FW inspect:      0               0               0               0
+10-min FW policy:       0               0               0               0
+</code></pre><h4>Show Global Stats</h4><pre><code>Global (Per-Box) statistics
+Total Session Aggressive Aging Period Off, Event Count: 0
+
+         Half Open  
+Protocol Session Cnt     Exceed
+-------- -----------     ------
+All      0               0
+UDP      0               0
+ICMP     0               0
+TCP      0               0
+</code></pre><h4>Logging Shows</h4><pre><code>6052: Jun 6 01:41:28.864: %IOSXE-4-PLATFORM: F0:
+cpp_cp: QFP:00 Thread:007 TS:00000106170032787836
+%THREAT_DEFENSE-4-TD_ERM_AVERAGE_THREAT:
+Event Rate Monitoring: Average threat identified.
+Interface [&lt;your_interface&gt;], event type [firewall inspection drops],
+average [101] configured threshold [100]
+TCP Syn Flood Half Open Count: 1, Exceed: 0
+Half Open Aggressive Aging Period Off, Event Count: 0
+</code></pre>
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

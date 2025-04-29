@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>top batches &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>top batches</h1>
+            <h2>Friday, September 25, 2015 <span>&raquo;</span> <a href="/tags/linux/">linux</a>, <a href="/tags/top/">top</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>It&#39;s nice to have atop or sar running for a historical look at resource usage, but<br>
+in some cases these are not available.  &#39;Top&#39; is nearly universally available.</p>
+<h4>What Top does</h4>
+<p>Gives you information on your system</p>
+
+<pre><code>
+top - 20:49:24 up  3:59,  1 user,  load average: 1.01, 1.03, 1.10
+Tasks: 353 total,   1 running, 351 sleeping,   0 stopped,   1 zombie
+%Cpu(s):  0.3 us,  0.1 sy,  0.0 ni, 99.6 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem:  19805422+total, 11105584 used, 18694864+free,   507824 buffers
+KiB Swap:        0 total,        0 used,        0 free.  7263240 cached Mem
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+ 2286 myproc   20   0  0.705t 4.291g 3.053g S  19.4  2.3   9:28.25 myprocd
+ 1199 myproc   20   0  525620 128020  86240 S  12.9  0.1   8:22.71 myprocd
+    3 root      20   0       0      0      0 S   6.5  0.0   0:04.11 ksoftirqd/0
+</code></pre>
+
+<p>Running natively in interactive mode &#39;top&#39; allows you to filter and sort.</p>
+<h4>Breaking down top output for redirection</h4>
+<p>Now we can run top in batch mode for one cycle redirecting output.  This<br>
+absolutely could fill /tmp if you let it run wild.  This will show<br>
+only the information on individual processes.</p>
+<pre><code>top -n 1 -b \
+| head -n 25 \
+| egrep -v &quot;top|Tasks|Cpu|Mem|Swap|PID&quot; \
+| tee &#47;tmp&#47;`date +&quot;%m-%d-%y_%M:%S&quot;`
+</code></pre>
+<p>Example:</p>
+
+<pre><code>
+1199 myproc   20   0  525620 138988  86240 S  12.9  0.1   9:07.36 myprocd
+ 2286 myproc   20   0  0.705t 4.336g 3.085g S   6.4  2.3  10:11.36 myprocd
+ 2297 root      20   0  137836  92084  85936 S   6.4  0.0   1:15.59 python
+    1 root      20   0   28724   5108   3104 S   0.0  0.0   0:04.93 systemd
+    2 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kthreadd
+    3 root      20   0       0      0      0 S   0.0  0.0   0:04.24 ksoftirqd/0
+    5 root       0 -20       0      0      0 S   0.0  0.0   0:00.00 kworker/0:0H
+    6 root      20   0       0      0      0 S   0.0  0.0   0:00.02 kworker/u64:0
+    8 root      20   0       0      0      0 S   0.0  0.0   1:01.80 rcu_sched
+    9 root      20   0       0      0      0 S   0.0  0.0   0:00.00 rcu_bh
+   10 root      rt   0       0      0      0 S   0.0  0.0   0:00.06 migration/0
+   11 root      rt   0       0      0      0 S   0.0  0.0   0:00.06 watchdog/0
+   12 root      rt   0       0      0      0 S   0.0  0.0   0:00.05 watchdog/1
+   13 root      rt   0       0      0      0 S   0.0  0.0   0:00.05 migration/1
+   14 root      20   0       0      0      0 S   0.0  0.0   0:04.38 ksoftirqd/1
+   15 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kworker/1:0
+   16 root       0 -20       0      0      0 S   0.0  0.0   0:00.00 kworker/1:0H
+   18 root      rt   0       0      0      0 S   0.0  0.0   0:00.04 watchdog/2
+</code></pre>
+
+<p>I would love it if you could do this with htop, but alas it does not support<br>
+batch mode.</p>
+
+<p>use watch -n 30 &#39;$TOP_CMD&#39; to run in console.  I have seen tools like Splunk/ELK use<br>
+a similar method to get this output into a central logging tool.</p>
+<h4>References</h4>
+<p><a href="https://en.wikipedia.org/wiki/Sar_%28Unix%29">sar</a><br>
+<a href="http://linux.die.net/man/1/atop">atop</a><br>
+<a href="http://hisham.hm/htop/">htop</a><br>
+<a href="https://lwn.net/Articles/387202/">atop lwn</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

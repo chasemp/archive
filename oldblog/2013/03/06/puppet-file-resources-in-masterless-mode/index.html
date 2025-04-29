@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>puppet file resources in masterless mode &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>puppet file resources in masterless mode</h1>
+            <h2>Wednesday, March 06, 2013 <span>&raquo;</span> <a href="/tags/puppet/">puppet</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Accessing file stores via puppet manifests in the real world.</p>
+
+<p>If you use Puppet to distribute file resources and you also test configuration changes locally it can be a pain.</p>
+<h4>Define a file resource for Puppet:</h4>
+<p><em>fileserver.conf:</em></p>
+
+<pre><code>
+[configfiles]
+  path /var/configfiles
+  allow *.com
+  deny *.lan
+  allow 192.168.0.0/24
+</code></pre>
+<h4>Refer to file resource in manifest</h4><pre><code>source =&gt; &quot;puppet:&#47;&#47;&#47;configfiles&#47;&quot;
+</code></pre>
+<p>and puppet will magically use this source.  </p>
+<h4>Local Runs Now Have Issues</h4>
+<p>But when you run something locally like:</p>
+<pre><code> puppet apply --debug test.pp
+</code></pre>
+<p>Errors occurr: </p>
+<pre><code> Could not evaluate: Could not retrieve information from environment production source
+</code></pre><h4>Making localruns clean</h4>
+<p>You can set things up so that Puppet will try your masterful resource and if it<br>
+fails it will do (essentially) a noop by serving a directory to itself.</p>
+
+<pre><code>
+#if run in master mode grabs files from configfile resource
+#if run locally essentially does a noop refering file source to itself
+$remote_source ="puppet:///configfiles/myconfig"
+$fname = "/tmp/what"
+node default {
+    source =
+    file {$fname:
+        ensure => 'file'
+        source  => [$remote_source,
+                    $fname,
+                    inline_template('<%= remote_source.gsub /^puppet:\/\/\//,
+                    "file://#{Dir.pwd}/" %>')],
+    }
+}
+</code></pre>
+
+<p>This can be misleading when you test locally because you are not seeing the actual behavior,<br>
+but there is not a way to see the actual behavior because testing locally in a master/slave<br>
+setup only goes so far.  The big advantage to this is that operations that were previously <br>
+failing because of this falsly accussed dependency now can be debugged.</p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

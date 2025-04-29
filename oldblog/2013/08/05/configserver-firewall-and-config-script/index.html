@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>configserver firewall and config script &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>configserver firewall and config script</h1>
+            <h2>Monday, August 05, 2013 <span>&raquo;</span> <a href="/tags/configserver/">configserver</a>, <a href="/tags/iptables/">iptables</a>, <a href="/tags/linux/">linux</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>I have seen an all-in-one configure script for linux security mentioned several times on <a href="http://reddit.com/r/linuxadmin">/r/linuxadmin</a> and I am giving it a quick runthrough to explore.</p>
+<h4>Install</h4>
+<p>Linux wheezytester 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1 x86_64 GNU/Linux</p>
+<pre><code>wget http:&#47;&#47;configserver.com&#47;free&#47;csf.tgz
+tar zxfv csf.tgz
+cd csf&#47;
+sh install.sh
+</code></pre>
+<p><a href="javascript:toggleDiv('hideme');">Show Install Output</a></p>
+
+<div id="hideme" style="display:none;">
+<pre><code>
+Configuring for OS
+
+Running csf generic installer
+
+Installing generic csf and lfd
+
+Check we're running as root
+
+Checking Perl modules...mode of `os.pl' changed from 0755 (rwxr-xr-x) to 0700 (rwx------)
+Configuration modified for Debian/Ubuntu/Gentoo settings /etc/csf/csf.conf
+ok
+
+mkdir: created directory `/etc/csf'
+mkdir: created directory `/var/lib/csf'
+mkdir: created directory `/usr/local/csf'
+mkdir: created directory `/var/lib/csf/Geo'
+mkdir: created directory `/var/lib/csf/ui'
+mkdir: created directory `/var/lib/csf/stats'
+mkdir: created directory `/var/lib/csf/lock'
+mkdir: created directory `/var/lib/csf/webmin'
+mkdir: created directory `/var/lib/csf/zone'
+mkdir: created directory `/usr/local/csf/bin'
+mkdir: created directory `/usr/local/csf/lib'
+mkdir: created directory `/usr/local/csf/tpl'
+`csf.generic.conf' -> `/etc/csf/csf.conf'
+`csf.allow' -> `/etc/csf/./csf.allow'
+`csf.deny' -> `/etc/csf/./csf.deny'
+`csf.redirect' -> `/etc/csf/./csf.redirect'
+`csf.resellers' -> `/etc/csf/./csf.resellers'
+`csf.dirwatch' -> `/etc/csf/./csf.dirwatch'
+`csf.logfiles' -> `/etc/csf/./csf.logfiles'
+`csf.logignore' -> `/etc/csf/./csf.logignore'
+`csf.blocklists' -> `/etc/csf/./csf.blocklists'
+`csf.ignore' -> `/etc/csf/./csf.ignore'
+`csf.generic.pignore' -> `/etc/csf/csf.pignore'
+`csf.rignore' -> `/etc/csf/./csf.rignore'
+`csf.fignore' -> `/etc/csf/./csf.fignore'
+`csf.signore' -> `/etc/csf/./csf.signore'
+`csf.suignore' -> `/etc/csf/./csf.suignore'
+`csf.uidignore' -> `/etc/csf/./csf.uidignore'
+`csf.mignore' -> `/etc/csf/./csf.mignore'
+`csf.sips' -> `/etc/csf/./csf.sips'
+`csf.dyndns' -> `/etc/csf/./csf.dyndns'
+`alert.txt' -> `/usr/local/csf/tpl/./alert.txt'
+`reselleralert.txt' -> `/usr/local/csf/tpl/./reselleralert.txt'
+`logalert.txt' -> `/usr/local/csf/tpl/./logalert.txt'
+`logfloodalert.txt' -> `/usr/local/csf/tpl/./logfloodalert.txt'
+`syslogalert.txt' -> `/usr/local/csf/tpl/./syslogalert.txt'
+`integrityalert.txt' -> `/usr/local/csf/tpl/./integrityalert.txt'
+`exploitalert.txt' -> `/usr/local/csf/tpl/./exploitalert.txt'
+`queuealert.txt' -> `/usr/local/csf/tpl/./queuealert.txt'
+`tracking.txt' -> `/usr/local/csf/tpl/./tracking.txt'
+`connectiontracking.txt' -> `/usr/local/csf/tpl/./connectiontracking.txt'
+`processtracking.txt' -> `/usr/local/csf/tpl/./processtracking.txt'
+`accounttracking.txt' -> `/usr/local/csf/tpl/./accounttracking.txt'
+`usertracking.txt' -> `/usr/local/csf/tpl/./usertracking.txt'
+`sshalert.txt' -> `/usr/local/csf/tpl/./sshalert.txt'
+`webminalert.txt' -> `/usr/local/csf/tpl/./webminalert.txt'
+`sualert.txt' -> `/usr/local/csf/tpl/./sualert.txt'
+`consolealert.txt' -> `/usr/local/csf/tpl/./consolealert.txt'
+`uialert.txt' -> `/usr/local/csf/tpl/./uialert.txt'
+`cpanelalert.txt' -> `/usr/local/csf/tpl/./cpanelalert.txt'
+`scriptalert.txt' -> `/usr/local/csf/tpl/./scriptalert.txt'
+`relayalert.txt' -> `/usr/local/csf/tpl/./relayalert.txt'
+`filealert.txt' -> `/usr/local/csf/tpl/./filealert.txt'
+`watchalert.txt' -> `/usr/local/csf/tpl/./watchalert.txt'
+`loadalert.txt' -> `/usr/local/csf/tpl/./loadalert.txt'
+`resalert.txt' -> `/usr/local/csf/tpl/./resalert.txt'
+`portscan.txt' -> `/usr/local/csf/tpl/./portscan.txt'
+`uidscan.txt' -> `/usr/local/csf/tpl/./uidscan.txt'
+`permblock.txt' -> `/usr/local/csf/tpl/./permblock.txt'
+`netblock.txt' -> `/usr/local/csf/tpl/./netblock.txt'
+`portknocking.txt' -> `/usr/local/csf/tpl/./portknocking.txt'
+`forkbombalert.txt' -> `/usr/local/csf/tpl/./forkbombalert.txt'
+`x-arf.txt' -> `/usr/local/csf/tpl/./x-arf.txt'
+`regex.custom.pm' -> `/usr/local/csf/bin/./regex.custom.pm'
+`pt_deleted_action.pl' -> `/usr/local/csf/bin/./pt_deleted_action.pl'
+`messenger' -> `/etc/csf/./messenger'
+`messenger/index.html' -> `/etc/csf/./messenger/index.html'
+`messenger/csf_small.png' -> `/etc/csf/./messenger/csf_small.png'
+`messenger/index.text' -> `/etc/csf/./messenger/index.text'
+`ui' -> `/etc/csf/./ui'
+`ui/server.key' -> `/etc/csf/./ui/server.key'
+`ui/images' -> `/etc/csf/./ui/images'
+`ui/images/deliver.png' -> `/etc/csf/./ui/images/deliver.png'
+`ui/images/plus.png' -> `/etc/csf/./ui/images/plus.png'
+`ui/images/minus.png' -> `/etc/csf/./ui/images/minus.png'
+`ui/images/ip.png' -> `/etc/csf/./ui/images/ip.png'
+`ui/images/LICENSE.txt' -> `/etc/csf/./ui/images/LICENSE.txt'
+`ui/images/cse_small.png' -> `/etc/csf/./ui/images/cse_small.png'
+`ui/images/icon.gif' -> `/etc/csf/./ui/images/icon.gif'
+`ui/images/viewdelivery.png' -> `/etc/csf/./ui/images/viewdelivery.png'
+`ui/images/cxs.png' -> `/etc/csf/./ui/images/cxs.png'
+`ui/images/delete.png' -> `/etc/csf/./ui/images/delete.png'
+`ui/images/cxs_small.png' -> `/etc/csf/./ui/images/cxs_small.png'
+`ui/images/csf_small.png' -> `/etc/csf/./ui/images/csf_small.png'
+`ui/images/cxs-loader.gif' -> `/etc/csf/./ui/images/cxs-loader.gif'
+`ui/images/perm.png' -> `/etc/csf/./ui/images/perm.png'
+`ui/ui.allow' -> `/etc/csf/./ui/ui.allow'
+`ui/ui.ban' -> `/etc/csf/./ui/ui.ban'
+`ui/server.crt' -> `/etc/csf/./ui/server.crt'
+`lfd.logrotate' -> `/etc/logrotate.d/lfd'
+`csfcron.sh' -> `/etc/cron.d/csfcron.sh'
+`csf.pl' -> `/usr/sbin/csf'
+`lfd.pl' -> `/usr/sbin/lfd'
+`/etc/csf/csf.pl' -> `/usr/sbin/csf'
+`/etc/csf/lfd.pl' -> `/usr/sbin/lfd'
+`/etc/csf/csfui.pl' -> `/usr/local/csf/bin/csfui.pl'
+`/etc/csf/csftest.pl' -> `/usr/local/csf/bin/csftest.pl'
+`/etc/csf/pt_deleted_action.pl' -> `/usr/local/csf/bin/pt_deleted_action.pl'
+`/etc/csf/remove_apf_bfd.sh' -> `/usr/local/csf/bin/remove_apf_bfd.sh'
+`/etc/csf/uninstall.sh' -> `/usr/local/csf/bin/uninstall.sh'
+`/etc/csf/regex.custom.pm' -> `/usr/local/csf/bin/regex.custom.pm'
+`/etc/csf/webmin' -> `/usr/local/csf/lib/webmin'
+`/etc/csf/alerts' -> `/usr/local/csf/tpl'
+`uninstall.generic.sh' -> `/usr/local/csf/bin/uninstall.sh'
+`csfui.pl' -> `/usr/local/csf/bin/csfui.pl'
+`csfuir.pl' -> `/usr/local/csf/bin/csfuir.pl'
+`cseui.pl' -> `/usr/local/csf/bin/cseui.pl'
+`csftest.pl' -> `/usr/local/csf/bin/csftest.pl'
+`regex.pm' -> `/usr/local/csf/bin/regex.pm'
+`servercheck.pm' -> `/usr/local/csf/bin/servercheck.pm'
+`remove_apf_bfd.sh' -> `/usr/local/csf/bin/remove_apf_bfd.sh'
+`readme.txt' -> `/etc/csf/readme.txt'
+`sanity.txt' -> `/usr/local/csf/lib/sanity.txt'
+`restricted.txt' -> `/usr/local/csf/lib/restricted.txt'
+`changelog.txt' -> `/etc/csf/changelog.txt'
+`install.txt' -> `/etc/csf/install.txt'
+`version.txt' -> `/etc/csf/version.txt'
+`license.txt' -> `/etc/csf/license.txt'
+`lfd.sh' -> `/etc/init.d/lfd'
+`csf.sh' -> `/etc/init.d/csf'
+`webmin' -> `/usr/local/csf/lib/webmin'
+`webmin/csf' -> `/usr/local/csf/lib/webmin/csf'
+`webmin/csf/module.info' -> `/usr/local/csf/lib/webmin/csf/module.info'
+`webmin/csf/images' -> `/usr/local/csf/lib/webmin/csf/images'
+`webmin/csf/images/plus.png' -> `/usr/local/csf/lib/webmin/csf/images/plus.png'
+`webmin/csf/images/minus.png' -> `/usr/local/csf/lib/webmin/csf/images/minus.png'
+`webmin/csf/images/ip.png' -> `/usr/local/csf/lib/webmin/csf/images/ip.png'
+`webmin/csf/images/LICENSE.txt' -> `/usr/local/csf/lib/webmin/csf/images/LICENSE.txt'
+`webmin/csf/images/icon.gif' -> `/usr/local/csf/lib/webmin/csf/images/icon.gif'
+`webmin/csf/images/delete.png' -> `/usr/local/csf/lib/webmin/csf/images/delete.png'
+`webmin/csf/images/csf_small.png' -> `/usr/local/csf/lib/webmin/csf/images/csf_small.png'
+`webmin/csf/images/perm.png' -> `/usr/local/csf/lib/webmin/csf/images/perm.png'
+`webmin/csf/index.cgi' -> `/usr/local/csf/lib/webmin/csf/index.cgi'
+`Net' -> `/usr/local/csf/lib/Net'
+`Net/CIDR' -> `/usr/local/csf/lib/Net/CIDR'
+`Net/CIDR/Lite.pm' -> `/usr/local/csf/lib/Net/CIDR/Lite.pm'
+`Geo' -> `/usr/local/csf/lib/Geo'
+`Geo/IP' -> `/usr/local/csf/lib/Geo/IP'
+`Geo/IP/Record.pod' -> `/usr/local/csf/lib/Geo/IP/Record.pod'
+`Geo/IP/Record.pm' -> `/usr/local/csf/lib/Geo/IP/Record.pm'
+`Geo/Mirror.pm' -> `/usr/local/csf/lib/Geo/Mirror.pm'
+`Geo/IP.pm' -> `/usr/local/csf/lib/Geo/IP.pm'
+`Crypt' -> `/usr/local/csf/lib/Crypt'
+`Crypt/Blowfish_PP.pm' -> `/usr/local/csf/lib/Crypt/Blowfish_PP.pm'
+`Crypt/CBC.pm' -> `/usr/local/csf/lib/Crypt/CBC.pm'
+`HTTP' -> `/usr/local/csf/lib/HTTP'
+`HTTP/Tiny.pm' -> `/usr/local/csf/lib/HTTP/Tiny.pm'
+`csf.div' -> `/usr/local/csf/lib/csf.div'
+`ui/images/deliver.png' -> `/etc/csf/ui/./images/deliver.png'
+`ui/images/plus.png' -> `/etc/csf/ui/./images/plus.png'
+`ui/images/minus.png' -> `/etc/csf/ui/./images/minus.png'
+`ui/images/ip.png' -> `/etc/csf/ui/./images/ip.png'
+`ui/images/LICENSE.txt' -> `/etc/csf/ui/./images/LICENSE.txt'
+`ui/images/cse_small.png' -> `/etc/csf/ui/./images/cse_small.png'
+`ui/images/icon.gif' -> `/etc/csf/ui/./images/icon.gif'
+`ui/images/viewdelivery.png' -> `/etc/csf/ui/./images/viewdelivery.png'
+`ui/images/cxs.png' -> `/etc/csf/ui/./images/cxs.png'
+`ui/images/delete.png' -> `/etc/csf/ui/./images/delete.png'
+`ui/images/cxs_small.png' -> `/etc/csf/ui/./images/cxs_small.png'
+`ui/images/csf_small.png' -> `/etc/csf/ui/./images/csf_small.png'
+`ui/images/cxs-loader.gif' -> `/etc/csf/ui/./images/cxs-loader.gif'
+`ui/images/perm.png' -> `/etc/csf/ui/./images/perm.png'
+`lfdcron.sh' -> `/etc/cron.d/lfdcron.sh'
+`csf.1.txt' -> `/usr/local/man/man1/csf.1'
+`csf.help' -> `/usr/local/csf/lib/csf.help'
+chmod: cannot access `/var/log/lfd.log*': No such file or directory
+mode of `/usr/local/csf/bin/cseui.pl' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/csftest.pl' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/csfui.pl' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/csfuir.pl' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/pt_deleted_action.pl' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/remove_apf_bfd.sh' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/uninstall.sh' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/regex.custom.pm' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/regex.pm' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/usr/local/csf/bin/servercheck.pm' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/etc/csf/webmin/csf/index.cgi' changed from 0600 (rw-------) to 0700 (rwx------)
+mode of `/etc/init.d/lfd' retained as 0755 (rwxr-xr-x)
+mode of `/etc/init.d/csf' retained as 0755 (rwxr-xr-x)
+mode of `/etc/cron.d/lfdcron.sh' changed from 0755 (rwxr-xr-x) to 0644 (rw-r--r--)
+mode of `/etc/cron.d/csfcron.sh' changed from 0755 (rwxr-xr-x) to 0644 (rw-r--r--)
+mode of `auto.generic.pl' changed from 0755 (rwxr-xr-x) to 0700 (rwx------)
+
+*** FASTSTART Enabled
+
+
+*** IPV6 Enabled
+
+
+*** IPV6_SPI set to 1
+
+
+TCP ports currently listening for incoming connections:
+22,111,60787
+
+UDP ports currently listening for incoming connections:
+68,111,904,39545,54776
+
+Note: The port details above are for information only, csf hasn't been auto-configured.
+
+Don't forget to:
+1. Configure the following options in the csf configuration to suite your server: TCP_*, UDP_*
+2. Restart csf and lfd
+3. Set TESTING to 0 once you're happy with the firewall, lfd will not run until you do so
+
+Adding current SSH session IP address to the csf whitelist in csf.allow:
+Adding 172.16.104.1 to csf.allow only while in TESTING mode (not iptables ACCEPT)
+*WARNING* TESTING mode is enabled - do not forget to disable it in the configuration
+update-rc.d: using dependency based boot sequencing
+update-rc.d: using dependency based boot sequencing
+update-rc.d: using dependency based boot sequencing
+update-rc.d: using dependency based boot sequencing
+`/etc/csf/csfwebmin.tgz' -> `/usr/local/csf/csfwebmin.tgz'
+
+Installation Completed
+</code></pre>
+</div>
+<h4>Checking out default status</h4><pre><code>&#47;etc&#47;init.d&#47;csf status
+</code></pre>
+<pre><code>
+Status of csf:Chain INPUT (policy ACCEPT 1622 packets, 145K bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 771 packets, 260K bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+
+Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+*WARNING* TESTING mode is enabled - do not forget to disable it in the configuration
+</code></pre>
+
+<p>Notice &mdash; Testing Mode is the install default so it doesn&#39;t mess up your system.</p>
+
+<p>That is cool.</p>
+<h4>Configuring</h4>
+<p>This configuration file is verbose and long winded.  Which it has to be with all of<br>
+the features packed in.  Here is a partial configuration I created to play with.  I<br>
+have shortened the default descriptions to my own line notes.</p>
+
+<p>Configured Sections:</p>
+
+<p><em>Initial Settings</em><br>
+<em>IPv4 Port Settings</em><br>
+<em>IPv6 Port Settings</em><br>
+<em>General Settings</em><br>
+<em>SMTP Settings</em><br>
+<em>Port Flood Settings</em><br>
+<em>Logging Settings</em></p>
+
+<p>Unconfigured sections:</p>
+
+<p><em>Reporting Settings</em><br>
+<em>Country Code Lists and Settings</em><br>
+<em>Login Failure Blocking and Alerts</em><br>
+<em>Directory Watching &amp; Integrity</em><br>
+<em>Distributed Attacks</em><br>
+<em>Login Tracking</em><br>
+<em>Connection Tracking</em><br>
+<em>Process Tracking</em><br>
+<em>Port Scan Tracking</em><br>
+<em>User ID Tracking</em><br>
+<em>Account Tracking</em><br>
+<em>Integrated User Interface</em><br>
+<em>Messenger service</em><br>
+<em>lfd Clustering</em><br>
+<em>Port Knocking</em><br>
+<em>Log Scanner</em><br>
+<em>Statistics Settings</em><br>
+<em>OS Specific Settings</em></p>
+<pre><code>nano &#47;etc&#47;csf&#47;csf.conf
+</code></pre>
+<pre><code>
+#for real
+TESTING = "0"
+TESTING_INTERVAL = "5"
+# 2 = Disabled UI
+RESTRICT_UI = "2"
+# You should check for new version announcements at http://blog.configserver.com
+AUTO_UPDATES = "0"
+# Allow incoming TCP ports
+TCP_IN = "2280"
+# Allow outgoing TCP ports
+TCP_OUT = "20,21,22,25,53,80,110,113,443"
+# Allow incoming UDP ports
+UDP_IN = "53"
+# Allow outgoing UDP ports
+# To allow outgoing traceroute add 33434:33523 to this list 
+UDP_OUT = "20,21,53,113,123"
+# Allow incoming PING
+ICMP_IN = "1"
+# Set the per IP address incoming ICMP packet rate
+# To disable rate limiting set to "0"
+ICMP_IN_RATE = "5/s"
+# Allow outgoing PING
+ICMP_OUT = "1"
+ICMP_OUT_RATE = "0"
+#no ipv6
+IPV6 = "0"
+#do all nics but lo
+ETH_DEVICE = ""
+ETH6_DEVICE = ""
+#no skips
+ETH_DEVICE_SKIP = ""
+USE_CONNTRACK = "1"
+#verify syslog
+SYSLOG_CHECK = "1"
+IGNORE_ALLOW = "0"
+DNS_STRICT = "0"
+DNS_STRICT_NS = "0"
+#set according to box resources
+DENY_IP_LIMIT = "500"
+DENY_TEMP_IP_LIMIT = "250"
+# Enable login failure detection daemon (lfd)
+LF_DAEMON = "1"
+LF_CSF = "1"
+# This option uses IPTABLES_SAVE, IPTABLES_RESTORE and IP6TABLES_SAVE
+FASTSTART = "1"
+LFDSTART = "0"
+VERBOSE = "1"
+# This will drop packets that iptables has deemed INVALID
+PACKET_FILTER = "1"
+LF_LOOKUPS = "0"
+SMTP_BLOCK = "0"
+SMTP_ALLOWLOCAL = "1"
+SMTP_PORTS = "25,465,587"
+SMTP_ALLOWUSER = ""
+SMTP_ALLOWGROUP = "mail,mailman"
+#this is dealers choice
+#if tripped you see latency
+SYNFLOOD = "1"
+SYNFLOOD_RATE = "10000/s"
+SYNFLOOD_BURST = "1500"
+CONNLIMIT = ""
+PORTFLOOD = ""
+UDPFLOOD = "0"
+UDPFLOOD_LIMIT = "100/s"
+UDPFLOOD_BURST = "500"
+#add yourself
+UDPFLOOD_ALLOWUSER = "named"
+SYSLOG = "0"
+# Drop target for iptables rules. This can be set to either DROP ot REJECT.
+DROP = "DROP"
+DROP_LOGGING = "1"
+# Enable logging of dropped incoming connections from blocked IP addresses
+DROP_IP_LOGGING = "0"
+DROP_OUT_LOGGING = "0"
+DROP_ONLYRES = "0"
+DROP_NOLOG = "67,68,111,113,135:139,445,500,513,520"
+DROP_PF_LOGGING = "0"
+CONNLIMIT_LOGGING = "0"
+UDPFLOOD_LOGGING = "1"
+LOGFLOOD_ALERT = "1"
+WATCH_MODE = "0"
+#Reporting section and on down left as default
+</code></pre>
+<h4>Resetting Configuration</h4>
+<p>If you try to restart the service you see</p>
+<pre><code>&#47;etc&#47;init.d&#47;csf restart
+WARNING: This script should ONLY be used by the init process. To restart csf use the CLI command &#39;csf -r&#39;
+</code></pre>
+<p>So</p>
+<pre><code>csf -r
+</code></pre>
+<p>Loads and reloads iptables configuration from main config file.</p>
+<h4>What do we end up with</h4>
+<p>IPTables Configuration Generated</p>
+<pre><code>iptables -L -n
+</code></pre>
+<p><a href="javascript:toggleDiv('iptablesoutput');">Show IPtables Output</a></p>
+
+<div id="iptablesoutput" style="display:none;">
+<pre><code>
+Chain INPUT (policy DROP)
+target     prot opt source               destination         
+ACCEPT     tcp  --  172.16.104.2         0.0.0.0/0            tcp dpt:53
+ACCEPT     udp  --  172.16.104.2         0.0.0.0/0            udp dpt:53
+ACCEPT     tcp  --  172.16.104.2         0.0.0.0/0            tcp spt:53
+ACCEPT     udp  --  172.16.104.2         0.0.0.0/0            udp spt:53
+LOCALINPUT  all  --  0.0.0.0/0            0.0.0.0/0           
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0           
+SYNFLOOD   tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x17/0x02
+INVALID    tcp  --  0.0.0.0/0            0.0.0.0/0           
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:2280
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW udp dpt:53
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 8 limit: avg 5/sec burst 5
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 0 limit: avg 5/sec burst 5
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 11
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 3
+LOGDROPIN  all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain FORWARD (policy DROP)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy DROP)
+target     prot opt source               destination         
+ACCEPT     tcp  --  0.0.0.0/0            172.16.104.2         tcp dpt:53
+ACCEPT     udp  --  0.0.0.0/0            172.16.104.2         udp dpt:53
+ACCEPT     tcp  --  0.0.0.0/0            172.16.104.2         tcp spt:53
+ACCEPT     udp  --  0.0.0.0/0            172.16.104.2         udp spt:53
+LOCALOUTPUT  all  --  0.0.0.0/0            0.0.0.0/0           
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:53
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:53
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp spt:53
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            udp spt:53
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0           
+INVALID    tcp  --  0.0.0.0/0            0.0.0.0/0           
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:20
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:21
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:22
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:25
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:53
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:80
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:110
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:113
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW tcp dpt:443
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW udp dpt:20
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW udp dpt:21
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW udp dpt:53
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW udp dpt:113
+ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            ctstate NEW udp dpt:123
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 0
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 8
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 11
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0            icmptype 3
+LOGDROPOUT  all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain ALLOWIN (1 references)
+target     prot opt source               destination         
+ACCEPT     all  --  172.16.104.1         0.0.0.0/0           
+
+Chain ALLOWOUT (1 references)
+target     prot opt source               destination         
+ACCEPT     all  --  0.0.0.0/0            172.16.104.1        
+
+Chain DENYIN (1 references)
+target     prot opt source               destination         
+
+Chain DENYOUT (1 references)
+target     prot opt source               destination         
+
+Chain INVALID (2 references)
+target     prot opt source               destination         
+INVDROP    all  --  0.0.0.0/0            0.0.0.0/0            ctstate INVALID
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x3F/0x00
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x3F/0x3F
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x03/0x03
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x06/0x06
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x05/0x05
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x11/0x01
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x18/0x08
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags: 0x30/0x20
+INVDROP    tcp  --  0.0.0.0/0            0.0.0.0/0            tcpflags:! 0x17/0x02 ctstate NEW
+
+Chain INVDROP (10 references)
+target     prot opt source               destination         
+DROP       all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain LOCALINPUT (1 references)
+target     prot opt source               destination         
+ALLOWIN    all  --  0.0.0.0/0            0.0.0.0/0           
+DENYIN     all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain LOCALOUTPUT (1 references)
+target     prot opt source               destination         
+ALLOWOUT   all  --  0.0.0.0/0            0.0.0.0/0           
+DENYOUT    all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain LOGDROPIN (1 references)
+target     prot opt source               destination         
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:67
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:67
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:68
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:68
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:111
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:111
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:113
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:113
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpts:135:139
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpts:135:139
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:445
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:445
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:500
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:500
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:513
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:513
+DROP       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:520
+DROP       udp  --  0.0.0.0/0            0.0.0.0/0            udp dpt:520
+LOG        tcp  --  0.0.0.0/0            0.0.0.0/0            limit: avg 30/min \
+                  burst 5 LOG flags 0 level 4 prefix "Firewall: *TCP_IN Blocked* "
+LOG        udp  --  0.0.0.0/0            0.0.0.0/0            limit: avg 30/min \
+                  burst 5 LOG flags 0 level 4 prefix "Firewall: *UDP_IN Blocked* "
+LOG        icmp --  0.0.0.0/0            0.0.0.0/0            limit: avg 30/min \
+                  burst 5 LOG flags 0 level 4 prefix "Firewall: *ICMP_IN Blocked* "
+DROP       all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain LOGDROPOUT (1 references)
+target     prot opt source               destination         
+LOG        tcp  --  0.0.0.0/0            0.0.0.0/0            \
+                  tcpflags: 0x17/0x02 limit: avg 30/min burst 5 LOG flags 8 level \
+                  4 prefix "Firewall: *TCP_OUT Blocked* "
+LOG        udp  --  0.0.0.0/0            0.0.0.0/0            \
+                  limit: avg 30/min burst 5 LOG flags 8 level 4 prefix \
+                  "Firewall: *UDP_OUT Blocked* "
+LOG        icmp --  0.0.0.0/0            0.0.0.0/0            \
+                  limit: avg 30/min burst 5 LOG flags 8 level 4 prefix \
+                  "Firewall: *ICMP_OUT Blocked* "
+DROP       all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain SYNFLOOD (1 references)
+target     prot opt source               destination         
+RETURN     all  --  0.0.0.0/0            0.0.0.0/0            limit: avg 10000/sec burst 1500
+LOG        all  --  0.0.0.0/0            0.0.0.0/0            limit: avg 30/min burst \
+                   5 LOG flags 0 level 4 prefix "Firewall: *SYNFLOOD Blocked* "
+DROP       all  --  0.0.0.0/0            0.0.0.0/0           
+</code></pre>
+</div>
+
+<p>Scan of the server</p>
+<pre><code>nmap -A 172.16.104.131
+</code></pre>
+<pre><code>
+Starting Nmap 6.25 ( http://nmap.org ) at 2013-08-05 15:48 CDT
+Nmap scan report for 172.16.104.131
+Host is up (0.0011s latency).
+Not shown: 998 closed ports
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 6.0p1 Debian 4 (protocol 2.0)
+| ssh-hostkey: 1024 70:6f:5e:ff:20:46:59:89:e2:3c:b2:02:83:f2:5a:d9 (DSA)
+| 2048 dc:01:80:6e:3f:d3:e4:31:de:06:ec:81:b3:5d:96:d7 (RSA)
+|_256 87:8f:c4:30:5c:51:f5:26:78:bc:46:7f:ce:f2:11:f9 (ECDSA)
+111/tcp open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          44942/tcp  status
+|_  100024  1          54275/udp  status
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at http://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 8.21 seconds
+</code></pre>
+
+<p>Firewall denials logged</p>
+<pre><code>Aug  5 15:48:13 wheezytester kernel: [ 7378.577396] \
+Firewall: *UDP_OUT Blocked* IN= OUT=eth0 SRC=172.16.104.131 DST=172.16.104.254 \
+LEN=328 TOS=0x00 PREC=0x00 TTL=64 ID=0 DF PROTO=UDP SPT=68 DPT=67 LEN=308 UID=0 GID=0 
+</code></pre>
+<p>Syslog analyzer</p>
+<pre><code>Aug  5 15:48:20 wheezytester lfd[2394]: SYSLOG check [zRX2uBS2T5C3gm33v9BCJDVK5]
+</code></pre><h4>Removal</h4>
+<p>Uninstalling csf and lfd&hellip;</p>
+
+<pre><code>
+Flushing chain `INPUT'
+
+<redacted for brevity>
+
+removed directory: `/var/lib/csf'
+
+...Done
+</code></pre>
+<h4>Thoughts</h4>
+<p>The CSF pack if pretty powerfull and I have a general idea of the usage experience.  I have<br>
+not tested this with Webmin or cPanel or any other wrapper.  I wouldn&#39;t use them if I had<br>
+the choice anyways.  I think this exists in a weird space as anyone who does operations <br>
+probably would feel limited by it, and anyone who has no experience in linux<br>
+administration would do well to side step it and learn the underlying tools directly.  I<br>
+appreciate what they have going here and I can tell a lot of thought went into it.<br>
+However, if I  were talking to myself as I was starting out with a personal Debian server<br>
+I would still not recommend going this route.  </p>
+
+<p>Instead I might recommend:</p>
+
+<ol>
+<li>disable root account remote access</li>
+<li>lock SSH down to key based auth</li>
+<li>whitelist your IP</li>
+<li>basic ip tables <a href="http://chasemp.github.io/2013/04/19/simple-iptables-uses/">setup</a></li>
+<li>avoid running sendmail, instead try <a href="http://untroubled.org/nullmailer/">nullmailer</a></li>
+<li>avoid running BIND </li>
+<li>use <a href="http://www.fail2ban.org/wiki/index.php/Main_Page">fail2ban</a></li>
+<li>Don&#39;t worry about portscanning, it&#39;s inevitable</li>
+<li>Try something like <a href="https://www.cloudflare.com/">CloudFlare&#39;s</a> free service</li>
+<li>Use Puppet and Git for deploying even small setups</li>
+<li>Backup up stuff outside of your server</li>
+<li>Use static site generators if feasible: <a href="http://jekyllrb.com/">jekyll</a> or <a href="https://github.com/Anomareh/mynt">mynt</a></li>
+</ol>
+
+<p>This is the basic approach that I prefer, but kudos to the CSF guys for putting<br>
+something out there to help people.  I can see using this in a lab to quickly reconfigure<br>
+a dummy host for attacking or tutorials.</p>
+<h4>Reference</h4>
+<p><a href="http://configserver.com/cp/csf.html">CSF</a><br>
+<a href="http://forum.configserver.com/">CSF Forum</a><br>
+<a href="http://www.reddit.com/r/linuxadmin">/r/linuxadmin</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

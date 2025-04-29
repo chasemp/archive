@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>using a golang library &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>using a golang library</h1>
+            <h2>Sunday, August 11, 2013 <span>&raquo;</span> <a href="/tags/golang/">golang</a>, <a href="/tags/tcpdump/">tcpdump</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p><a href="http://golang.org/">Go</a> is rather strict and has a &#39;one right way&#39; methodology.  I am going to demonstrate using a Golang tool that mimicks tcpdump.</p>
+<h4>Installing</h4><pre><code>aptitude install golang libpcap0.8-dev 
+</code></pre>
+<pre><code>
+The following NEW packages will be installed:
+  golang golang-doc{a} golang-go{a} golang-src{a} 
+0 packages upgraded, 4 newly installed, 0 to remove and 0 not upgraded.
+Need to get 24.8 MB of archives. After unpacking 88.9 MB will be used.
+Do you want to continue? [Y/n/?] Y
+Get: 1 http://ftp.us.debian.org/debian/ wheezy/main golang-src amd64 2:1.0.2-1.1 [2,989 kB]
+Get: 2 http://ftp.us.debian.org/debian/ wheezy/main golang-go amd64 2:1.0.2-1.1 [17.3 MB]
+Get: 3 http://ftp.us.debian.org/debian/ wheezy/main golang-doc all 2:1.0.2-1.1 [4,523 kB]                    
+Get: 4 http://ftp.us.debian.org/debian/ wheezy/main golang all 2:1.0.2-1.1 [24.9 kB]                         
+Fetched 24.8 MB in 38s (651 kB/s)                                                                            
+Preconfiguring packages ...
+Selecting previously unselected package golang-src.
+(Reading database ... 35651 files and directories currently installed.)
+Unpacking golang-src (from .../golang-src_2%3a1.0.2-1.1_amd64.deb) ...
+Selecting previously unselected package golang-go.
+Unpacking golang-go (from .../golang-go_2%3a1.0.2-1.1_amd64.deb) ...
+Selecting previously unselected package golang-doc.
+Unpacking golang-doc (from .../golang-doc_2%3a1.0.2-1.1_all.deb) ...
+Selecting previously unselected package golang.
+Unpacking golang (from .../golang_2%3a1.0.2-1.1_all.deb) ...
+Processing triggers for man-db ...
+Setting up golang-src (2:1.0.2-1.1) ...
+Setting up golang-go (2:1.0.2-1.1) ...
+Setting up golang-doc (2:1.0.2-1.1) ...
+Setting up golang (2:1.0.2-1.1) ...
+</code></pre>
+<h4>Setting up our environment</h4>
+<p>We need to setup our environment so Go knows where to find our library for building.</p>
+<pre><code>#can be anywhere the convention is $HOME
+mkdir -p $HOME&#47;go&#47;src
+#Goland looks for env GOPATH
+export GOPATH=$HOME&#47;go
+#including &#39;go install&#39; binaries in our normal $PATH
+export PATH=$PATH:$GOPATH&#47;bin
+
+cd ~&#47;go&#47;src&#47;
+git clone https:&#47;&#47;github.com&#47;akrennmair&#47;gopcap.git
+cd gopcap&#47;
+#compile
+go build
+#place in our bin directory
+go install
+</code></pre>
+<p>The ~/go/pkg directory is created with the gopcap lib</p>
+
+<pre><code>
+me@vm:~/go# tree
+.
+├── pkg
+│   └── linux_amd64
+│       └── gopcap.a
+└── src
+    └── gopcap
+        ├── decode.go
+        ├── decode_test.go
+        ├── io.go
+        ├── LICENSE
+        ├── pcap.go
+        ├── README.mkd
+        └── tools
+            ├── benchmark
+            │   └── benchmark.go
+            ├── pass
+            │   └── pass.go
+            ├── pcaptest
+            │   └── pcaptest.go
+            └── tcpdump
+                └── tcpdump.go
+
+</code></pre>
+<h4>Build tcpdump written in Go</h4><pre><code>cd ~&#47;go&#47;src&#47;gopcap&#47;tools&#47;tcpdump
+</code></pre>
+<p>-&gt; Change the &ldquo;github.com/akrennmair/gopcap&rdquo; to &#39;gopcp&#39; as we are using our local lib.</p>
+<pre><code>go build
+</code></pre>
+<p>Now there is a binary in our directory</p>
+<pre><code>me@vm:~&#47;go&#47;src&#47;gopcap&#47;tools&#47;tcpdump# ls
+tcpdump  tcpdump.go
+</code></pre>
+<p>We can run it like any program</p>
+
+<pre><code>
+me@vm:~/go/src/gopcap/tools/tcpdump# ./tcpdump 
+2013-08-10 03:43:37.399656 -0500 CDT 2013-08-10 03:43:37.399656 -0500 \
+CDT TCP 172.16.104.1:54048 > 172.16.104.131:22 [ack psh] SEQ=3090816858 ACK=2666230607 LEN=100
+2013-08-10 03:43:37.400096 -0500 CDT 2013-08-10 03:43:37.400096 -0500 \
+CDT TCP 172.16.104.131:22 > 172.16.104.1:54048 [ack psh] SEQ=2666230607 ACK=3090816906 LEN=260
+2013-08-10 03:43:37.400268 -0500 CDT 2013-08-10 03:43:37.400268 -0500 \
+CDT TCP 172.16.104.1:54048 > 172.16.104.131:22 [ack] SEQ=3090816906 ACK=2666230815 LEN=52
+</code></pre>
+<h4>Place this in our Go path</h4><pre><code>me@vm:~&#47;go&#47;src&#47;gopcap&#47;tools&#47;tcpdump# go install
+</code></pre>
+<p>Now our Go path tree looks like</p>
+
+<pre><code>
+me@vm:~/go/src/gopcap/tools/tcpdump# tree ~/go/
+/me/go/
+├── bin
+│   └── tcpdump
+├── pkg
+│   └── linux_amd64
+│       └── gopcap.a
+└── src
+    └── gopcap
+        ├── decode.go
+        ├── decode_test.go
+        ├── io.go
+        ├── LICENSE
+        ├── pcap.go
+        ├── README.mkd
+        └── tools
+            ├── benchmark
+            │   └── benchmark.go
+            ├── pass
+            │   └── pass.go
+            ├── pcaptest
+            │   └── pcaptest.go
+            └── tcpdump
+                ├── hexify.py
+                ├── tcpdump
+                └── tcpdump.go
+</code></pre>
+<h4>Go and Paths</h4>
+<p>So tcpdump is obviously already a *nix tool.  Right now if I issue the command I am getting the Go version.</p>
+<pre><code>&gt;which tcpdump
+&#47;root&#47;go&#47;bin&#47;tcpdump
+
+&gt;file ~&#47;go&#47;bin&#47;tcpdump 
+&#47;root&#47;go&#47;bin&#47;tcpdump: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), \
+dynamically linked (uses shared libs), not stripped
+</code></pre><h4>Useful</h4>
+<p>Clean up our build</p>
+<pre><code>go clean
+</code></pre>
+<p>Clean up our build and remove installed binaries</p>
+<pre><code>go clean -i 
+</code></pre>
+<p>Build verbosely</p>
+<pre><code>go build -x
+</code></pre>
+<pre><code>
+WORK=/tmp/go-build730443136
+mkdir -p $WORK/gopcap/tools/tcpdump/_obj/
+cd /root/go/src/gopcap/tools/tcpdump
+/usr/lib/go/pkg/tool/linux_amd64/6g -o $WORK/gopcap/tools/tcpdump/_obj/_go_.6 \
+    -p gopcap/tools/tcpdump -D _/root/go/src/gopcap/tools/tcpdump -I $WORK \
+    -I /root/go/pkg/linux_amd64 ./godump.go
+
+/usr/lib/go/pkg/tool/linux_amd64/pack grc $WORK/gopcap/tools/tcpdump.a \
+    $WORK/gopcap/tools/tcpdump/_obj/_go_.6
+cd .
+/usr/lib/go/pkg/tool/linux_amd64/6l -o $WORK/gopcap/tools/tcpdump/_obj/a.out \
+    -L $WORK -L /root/go/pkg/linux_amd64 $WORK/gopcap/tools/tcpdump.a
+cp $WORK/gopcap/tools/tcpdump/_obj/a.out tcpdump
+</code></pre>
+
+<p>Install verbosely</p>
+<pre><code>go install -x
+</code></pre>
+<pre><code>
+WORK=/tmp/go-build061121702
+mkdir -p $WORK/gopcap/tools/tcpdump/_obj/
+cd /root/go/src/gopcap/tools/tcpdump
+/usr/lib/go/pkg/tool/linux_amd64/6g -o $WORK/gopcap/tools/tcpdump/_obj/_go_.6 \
+    -p gopcap/tools/tcpdump -D _/root/go/src/gopcap/tools/tcpdump -I $WORK \
+    -I /root/go/pkg/linux_amd64 ./godump.go
+
+/usr/lib/go/pkg/tool/linux_amd64/pack grc $WORK/gopcap/tools/tcpdump.a \
+    $WORK/gopcap/tools/tcpdump/_obj/_go_.6
+cd .
+
+/usr/lib/go/pkg/tool/linux_amd64/6l -o $WORK/gopcap/tools/tcpdump/_obj/a.out \
+    -L $WORK -L /root/go/pkg/linux_amd64 $WORK/gopcap/tools/tcpdump.a
+
+mkdir -p /root/go/bin/
+cp $WORK/gopcap/tools/tcpdump/_obj/a.out /root/go/bin/tcpdump
+</code></pre>
+<h4>Reference</h4>
+<p><a href="http://golang.org/doc/install">go lang install</a><br>
+<a href="http://golang.org/doc/code.html">howto begin</a><br>
+<a href="https://github.com/akrennmair/gopcap">golang pcap</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

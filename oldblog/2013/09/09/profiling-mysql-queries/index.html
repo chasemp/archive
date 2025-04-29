@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>profiling mysql queries &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>profiling mysql queries</h1>
+            <h2>Monday, September 09, 2013 <span>&raquo;</span> <a href="/tags/mysql/">mysql</a></h2>
+        </div>
+        
+        <div class="body">
+            <p>MySQL has some native profiling and troubleshootings logs for queries.  Logging of <a href="http://dev.mysql.com/doc/refman/5.0/en/slow-query-log.html">slow queries</a> or even all <a href="http://dev.mysql.com/doc/refman/5.1/en/query-log.html">queries</a> done is possible, but can be a performance hit.  In some instances not having access to the application or permissions within SQL can also be a problem.</p>
+
+<p>You can get some good information using mysqadmin such as a count by query type.</p>
+
+<pre><code>
+root@vm:~# mysqladmin ext | grep -e 'Com_\(update\|select\|insert\)'
+| Com_insert                               | 207         |
+| Com_insert_select                        | 0           |
+| Com_select                               | 12423       |
+| Com_update                               | 71          |
+| Com_update_multi                         | 0           |
+</code></pre>
+
+<p>If you want more details without inteferring with MySQL Percona Tool Kit is a nice idea.</p>
+<h4>Installing Percona Tool kit</h4>
+<pre><code>
+wget http://www.percona.com/redir/downloads/percona-toolkit/LATEST/deb/percona-toolkit_2.2.4_all.deb
+aptitude install libdbd-mysql-perl libdbd-mysql-5.1-perl libterm-readkey-perl libio-socket-ssl-perl
+dpkg -i percona-toolkit_2.2.4_all.deb 
+</code></pre>
+
+<p>Make sure it has the tool we want</p>
+<pre><code>root@vm:~# which pt-query-digest
+&#47;usr&#47;bin&#47;pt-query-digest
+</code></pre><h4>Capture Query Traffic</h4><pre><code>tcpdump -s 65535 -x -nn -q -tttt -i any port 3306 &gt; mysql.netdump.txt
+</code></pre><h4>Translating Network Dump into MySQL details</h4><pre><code>pt-query-digest --type tcpdump mysql.tcp.txt &gt; dump.log
+</code></pre>
+<p>Some useful details: ranking of queries by time spent, index ratio, break down of query durations, and a breakout of individual queries.</p>
+
+<p><a href="javascript:toggleDiv('hideme');">Show Example dump.log Analysis</a></p>
+
+<div id="hideme" style="display:none;">
+<pre><code>
+# 600ms user time, 60ms system time, 26.84M rss, 85.55M vsz
+# Current date: Mon Sep  9 15:24:54 2013
+# Hostname: vm
+# Files: mysql.netdump.txt
+# Overall: 603 total, 112 unique, 15.68 QPS, 0.01x concurrency ___________
+# Time range: 2013-09-09 15:24:07.234666 to 15:24:45.693738
+# Attribute          total     min     max     avg     95%  stddev  median
+# ============     ======= ======= ======= ======= ======= ======= =======
+# Exec time          230ms       0     8ms   380us     1ms   794us   159us
+# Rows affecte         105       0       2    0.17    0.99    0.42       0
+# Query size       293.92k      14  59.65k  499.14  299.03   4.02k   84.10
+# Warning coun          17       0       2    0.03       0    0.17       0
+# Boolean:
+# No index use   1% yes,  98% no
+
+# Profile
+# Rank Query ID           Response time Calls R/Call V/M   Item
+# ==== ================== ============= ===== ====== ===== ===============
+#    1 0x5D51E5F01B88B79E  0.0368 16.0%    77 0.0005  0.00 ADMIN CONNECT
+#    2 0xAD033812F7A933C3  0.0224  9.8%     6 0.0037  0.00 INSERT STUFF1
+#    3 0x43777589CE6D9294  0.0135  5.9%     4 0.0034  0.00 SELECT YOUR_STUFF2
+#    4 0x1C67569E33078F1D  0.0108  4.7%     6 0.0018  0.00 INSERT YOUR_STUFF3
+
+# Query 1: 2.01 QPS, 0.00x concurrency, ID 0x5D51E5F01B88B79E at byte 985002
+# This item is included in the report because it matches --limit.
+# Scores: V/M = 0.00
+# Time range: 2013-09-09 15:24:07.234666 to 15:24:45.626723
+# Attribute    pct   total     min     max     avg     95%  stddev  median
+# ============ === ======= ======= ======= ======= ======= ======= =======
+# Count         12      77
+# Exec time     16    37ms    84us     8ms   477us     1ms   995us   260us
+# Rows affecte   0       0       0       0       0       0       0       0
+# Query size     0   2.26k      30      30      30      30       0      30
+# Warning coun   0       0       0       0       0       0       0       0
+# String:
+# Databases     (23/29%), mydb (12/15%)... 21 more
+# Hosts        127.0.0.1
+# Users        you (53/68%), me (15/19%), yourmom (9/11%)
+# Query_time distribution
+#   1us
+#  10us  ######
+# 100us  ################################################################
+#   1ms  ####
+#  10ms
+# 100ms
+#    1s
+#  10s+
+administrator command: Connect\G
+</code></pre>
+</div>
+<h4>Reference</h4>
+<p><a href="http://www.mysqlperformanceblog.com/2007/05/31/mysql-slow-query-log-in-the-table/">slow log</a><br>
+<a href="http://www.mysqlperformanceblog.com/2008/11/07/poor-mans-query-logging/">poor mans query log</a><br>
+<a href="http://www.percona.com/software/percona-toolkit">took kit</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

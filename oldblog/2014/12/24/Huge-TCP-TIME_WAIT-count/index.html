@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>Huge TCP TIME_WAIT count &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>Huge TCP TIME_WAIT count</h1>
+            <h2>Wednesday, December 24, 2014 <span>&raquo;</span> <a href="/tags/tcp/">tcp</a>, <a href="/tags/timewait/">timewait</a></h2>
+        </div>
+        
+        <div class="body">
+            <p>Recently I was running a job that parses a large backlog of items and updates<br>
+MySQL based on their outcome.  The items were being updated via API by a<br>
+webservice on the same host.  I was restricted to processing 10 jobs in parallel or<br>
+I would get connection errors and random connection issues.  The webservice returned<br>
+a generic failure but my own code returned OS code 99.</p>
+<pre><code>OS error code  99:  Cannot assign requested address
+</code></pre>
+<p>I was regularly tracking TIME_WAIT connections into the thousands.</p>
+<pre><code>netstat -anp | grep WAIT | wc -l
+2034
+</code></pre>
+<p>It turns out that client side I was exhausting my available port range for new connections.<br>
+After a bit of reading I decided on changing the following system control parameters:</p>
+<pre><code>echo 30 &gt; &#47;proc&#47;sys&#47;net&#47;ipv4&#47;tcp_fin_timeout
+echo 1 &gt; &#47;proc&#47;sys&#47;net&#47;ipv4&#47;tcp_tw_recycle
+echo 15000 65000 &gt; &#47;proc&#47;sys&#47;net&#47;ipv4&#47;ip_local_port_range
+</code></pre>
+<p>Shout out to the best DBA I know Springle for the insights and help in debugging MySQL.</p>
+<h4>References</h4>
+<p><a href="http://serverfault.com/questions/212093/how-to-reduce-number-of-sockets-in-time-wait">Serverfault</a><br>
+<a href="lxr.linux.no/#linux+v3.2.8/Documentation/networking/ip-sysctl.txt#L464">ip-sysctl.txt</a><br>
+<a href="http://www.speedguide.net/articles/linux-tweaking-121">Speedguide</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

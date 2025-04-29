@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>packaging R modules for debian &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>packaging R modules for debian</h1>
+            <h2>Wednesday, August 21, 2013 <span>&raquo;</span> <a href="/tags/debian/">debian</a>, <a href="/tags/R/">R</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>R is a well known statistics language and ecosystem.  Some of the more common extensions to it are available in the Debian repo&#39;s but not all.</p>
+<h4>Install on a test VM</h4><pre><code>aptitude install -y r-base fakeroot dpkg-deb build-essential
+</code></pre>
+<p>This will result in a lot of dependency packages so site back for a bit.</p>
+<h4>Getting your module</h4>
+<p>R has something akin to CPAN or PyPI that we can use to grab our module</p>
+
+<p>Drop into R shell</p>
+<pre><code>me@vm:~# R
+</code></pre>
+<pre><code>
+R version 2.15.1 (2012-06-22) -- "Roasted Marshmallows"
+Copyright (C) 2012 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+>
+</code></pre>
+
+<p>This will download and compile the rsvgdevice module</p>
+<pre><code>&gt;utils::install.packages(c(&#39;RSvgDevice&#39;));
+</code></pre>
+<pre><code>
+Installing package(s) into ‘/usr/local/lib/R/site-library’
+(as ‘lib’ is unspecified)
+trying URL 'http://rweb.quant.ku.edu/cran/src/contrib/RSvgDevice_0.6.4.3.tar.gz'
+Content type 'application/x-gzip' length 8710 bytes
+opened URL
+==================================================
+downloaded 8710 bytes
+
+* installing *source* package ‘RSvgDevice’ ...
+** package ‘RSvgDevice’ successfully unpacked and MD5 sums checked
+** libs
+gcc -std=gnu99 -I/usr/share/R/include -DNDEBUG      -fpic  -O2 -pipe -g  -c devSVG.c -o devSVG.o
+gcc -std=gnu99 -shared -o RSvgDevice.so devSVG.o -L/usr/lib/R/lib -lR
+installing to /usr/local/lib/R/site-library/RSvgDevice/libs
+** R
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded
+
+* DONE (RSvgDevice)
+
+The downloaded source packages are in
+    ‘/tmp/RtmpTMUZS0/downloaded_packages’
+> quit()
+</code></pre>
+
+<p>Your library is in /usr/local/lib/R/site-library/</p>
+<h4>Prepping your package</h4>
+<p>We are going to make a package named r-spec-rsvgdevice</p>
+<pre><code>mkdir -p r-spec-rsvgdevice&#47;src&#47;usr&#47;local&#47;lib&#47;R&#47;site-library&#47;
+cd r-spec-rsvgdevice
+mkdir -p .&#47;src&#47;DEBIAN&#47;
+cp -R &#47;src&#47;usr&#47;local&#47;lib&#47;R&#47;site-library&#47;RSvgDevice .&#47;src&#47;usr&#47;local&#47;lib&#47;R&#47;site-library&#47;
+</code></pre>
+<p>Making your control file</p>
+<pre><code>vim .&#47;src&#47;DEBIAN&#47;CONTROL
+</code></pre>
+<pre><code>
+Package: r-spec-rsvgdevice
+Priority: optional
+Section: misc
+Maintainer: You you@you.com
+Architecture: all
+Version: 0.6.4.3
+Homepage: http://cran.r-project.org/web/packages/RSvgDevice/index.html
+Description: svgdevice
+</code></pre>
+<h4>Building your package</h4>
+<pre><code>
+mkdir r-spec-rsvgdevice_0.6.4.3_all
+cp -R src/* r-spec-rsvgdevice_0.6.4.3_all
+fakeroot dpkg-deb -b r-spec-rsvgdevice_0.6.4.3_all
+</code></pre>
+<pre><code>dpkg-deb: building package `r-spec-rsvgdevice&#39; in `r-spec-rsvgdevice_0.6.4.3_all.deb&#39;.
+</code></pre><h4>Installing</h4><pre><code>dpkg -i r-spec-rsvgdevice_0.6.4.3_all.deb 
+</code></pre>
+<pre><code>
+Selecting previously unselected package r-spec-rsvgdevice.
+(Reading database ... 52624 files and directories currently installed.)
+Unpacking r-spec-rsvgdevice (from r-spec-rsvgdevice_0.6.4.3_all.deb) ...
+Setting up r-spec-rsvgdevice (0.6.4.3) ...
+</code></pre>
+<h4>Verifying Installation</h4>
+<pre><code>
+#R
+R>
+> library()
+
+Packages in library ‘/usr/local/lib/R/site-library’:
+
+RSvgDevice              An R SVG graphics device.
+</code></pre>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/10/09/apache-top/">apache top</a></h1>
+                <h2>Friday, October 09, 2015 <span>&raquo;</span> <a href="/tags/apache/">apache</a>, <a href="/tags/linux/">linux</a>, <a href="/tags/top/">top</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>There are a few different approaches to getting &#39;top&#39; style insight into Apache2.x</p>
+<h4>Debian/Ubuntu &#39;apachetop&#39; (0.12.6-16)</h4>
+<p><a hre
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/10/09/apache-top/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/10/09/watching-web-traffic/">specialty packet capture tools</a></h1>
+                <h2>Friday, October 09, 2015 <span>&raquo;</span> <a href="/tags/apache/">apache</a>, <a href="/tags/linux/">linux</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Situations where it&#39;s useful to analyze traffic:</p>
+
+<ul>
+<li>Don&#39;t have access to the logs</li>
+<li>Want to look at traffic somewhere upstream like a
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/10/09/watching-web-traffic/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/09/25/IPv4-pool-is-empty/">IPv4 pool is empty</a></h1>
+                <h2>Friday, September 25, 2015 <span>&raquo;</span> <a href="/tags/INTERNET/">INTERNET</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       <a href="https://www.arin.net/announcements/2015/20150924.html">ARIN IPv4 Free Pool Reaches Zero</a>
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/09/25/IPv4-pool-is-empty/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/09/25/keeping-an-eye-on-top/">top batches</a></h1>
+                <h2>Friday, September 25, 2015 <span>&raquo;</span> <a href="/tags/linux/">linux</a>, <a href="/tags/top/">top</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>It&#39;s nice to have atop or sar running for a historical look at resource usage, but<br>
+in some cases these are not available.  &#39;Top&#39; is nearly univ
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/09/25/keeping-an-eye-on-top/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/08/13/post-mortems/">post mortems</a></h1>
+                <h2>Thursday, August 13, 2015 <span>&raquo;</span> <a href="/tags/ops/">ops</a>, <a href="/tags/postmortem/">postmortem</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       <a href="https://github.com/danluu/post-mortems">https://github.com/danluu/post-mortems</a>
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/08/13/post-mortems/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/08/05/exploring-elasticsearch-_cat/">exploring elasticsearch _cat</a></h1>
+                <h2>Wednesday, August 05, 2015 <span>&raquo;</span> <a href="/tags/elasticsearch/">elasticsearch</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       ==== Preamble
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/08/05/exploring-elasticsearch-_cat/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/04/29/gpg-getting-started/">gpg getting started</a></h1>
+                <h2>Wednesday, April 29, 2015 <span>&raquo;</span> <a href="/tags/gpg/">gpg</a>, <a href="/tags/security/">security</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>I am regenerating my GPG key</p>
+
+<p>( This is not my actual key shown )</p>
+<h4>PGP</h4>
+<p><a href="https://en.wikipedia.org/wiki/Pretty_Good_Privacy">PGP</a
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/04/29/gpg-getting-started/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/04/08/RIPE-Atlas-Getting-Started/">RIPE Atlas Getting Started</a></h1>
+                <h2>Wednesday, April 08, 2015 <span>&raquo;</span> <a href="/tags/internet/">internet</a>, <a href="/tags/ripe/">ripe</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h3>Preamble</h3>
+<p><a href="http://en.wikipedia.org/wiki/R%C3%A9seaux_IP_Europ%C3%A9ens_Network_Coordination_Centre">RIPE NCC</a> is one of the Regional Internet Registries.  The
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/04/08/RIPE-Atlas-Getting-Started/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/04/08/internet-culture/">internet culture</a></h1>
+                <h2>Wednesday, April 08, 2015 <span>&raquo;</span> <a href="/tags/internet/">internet</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       Getting help and soliciting feedback on the Internet essential reading:
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/04/08/internet-culture/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/03/24/linux-permissions/">linux permissions</a></h1>
+                <h2>Tuesday, March 24, 2015 <span>&raquo;</span> <a href="/tags/linux/">linux</a>, <a href="/tags/permissions/">permissions</a>, <a href="/tags/sudo/">sudo</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       <strong>This Post is A Work in Progress</strong>
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/03/24/linux-permissions/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2015/02/04/dyn-bakers-dozen/">dyn bakers dozen</a></h1>
+                <h2>Wednesday, February 04, 2015 <span>&raquo;</span> <a href="/tags/dyn/">dyn</a>, <a href="/tags/internet/">internet</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       <a href="http://research.dyn.com/2015/02/bakers-dozen-2014-edition/">http://research.dyn.com/2015/02/bakers-dozen-2014-edition/</a>
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2015/02/04/dyn-bakers-dozen/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/12/24/Huge-TCP-TIME_WAIT-count/">Huge TCP TIME_WAIT count</a></h1>
+                <h2>Wednesday, December 24, 2014 <span>&raquo;</span> <a href="/tags/tcp/">tcp</a>, <a href="/tags/timewait/">timewait</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       Recently I was running a job that parses a large backlog of items and updates<br>
+MySQL based on their outcome.  The items were being updated via API by a<br>
+webservice on the same host.  I was restricted to processing 10 jobs in parallel or<br>
+I would get connection errors and random connection issues.  The webservice returned<br>
+a generic failure but my own code returned OS code 99.
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/12/24/Huge-TCP-TIME_WAIT-count/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/12/24/Phabricator-conduit-testing-via-CLI/">Phabricator conduit testing via CLI</a></h1>
+                <h2>Wednesday, December 24, 2014 <span>&raquo;</span> <a href="/tags/conduit/">conduit</a>, <a href="/tags/phabricator/">phabricator</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       Search for a user by username:
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/12/24/Phabricator-conduit-testing-via-CLI/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/12/24/Testing-email/">Testing email</a></h1>
+                <h2>Wednesday, December 24, 2014 <span>&raquo;</span> <a href="/tags/email/">email</a>, <a href="/tags/swaks/">swaks</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       I&#39;ve always tested email via Telnet, and have even sat in on interviews where<br>
+how to test email this way was one of the debugging problems.  Recently though<br>
+I have come to use Swaks as a slicker alternative.
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/12/24/Testing-email/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/12/24/Getting-Phabricator-Conduit-end-points/">Getting Phabricator Conduit end points</a></h1>
+                <h2>Wednesday, December 24, 2014 <span>&raquo;</span> <a href="/tags/phabricator/">phabricator</a>, <a href="/tags/python/">python</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       Recently I&#39;ve been spending a lot of time with Phabricator, and I often reference<br>
+the API specs.  This is a command that has been useful.
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/12/24/Getting-Phabricator-Conduit-end-points/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/03/18/osx-clang-compiler-unknown-option/">osx clang compiler unknown option</a></h1>
+                <h2>Tuesday, March 18, 2014 <span>&raquo;</span> <a href="/tags/clang/">clang</a>, <a href="/tags/mynt/">mynt</a>, <a href="/tags/osx/">osx</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       As of OSX Xcode tools &lt;=5.1 the clang compiler treats any unknown flag as an error.<br>
+This can cause some issues with existing tools that have old flags, or uncommon flags,<br>
+or who knows what.
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/03/18/osx-clang-compiler-unknown-option/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/02/27/python-monitoring-with-diamond-statsd-graphite/">python monitoring with diamond statsd graphite</a></h1>
+                <h2>Thursday, February 27, 2014 <span>&raquo;</span> <a href="/tags/devopskc/">devopskc</a>, <a href="/tags/diamond/">diamond</a>, <a href="/tags/graphite/">graphite</a>, <a href="/tags/statsd/">statsd</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       If you stayed late at the DevOpsKC meetup last night you have may have caught me giving this talk about getting a monitoring system going using python from end-to-end.  The meet was at offices of <a href="http://www.codero.com/">codero</a> who were gracious hosts, and the food was provided by Cerner.  Thanks again to the folks put this stuff together.  
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/02/27/python-monitoring-with-diamond-statsd-graphite/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/02/25/screen-shots/">screen shots I have saved</a></h1>
+                <h2>Tuesday, February 25, 2014 <span>&raquo;</span> <a href="/tags/funny/">funny</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       Gotta love the Python community.
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/02/25/screen-shots/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/01/27/cisco-ssl-vpn-from-cli/">cisco ssl vpn from cli</a></h1>
+                <h2>Monday, January 27, 2014 <span>&raquo;</span> <a href="/tags/cisco/">cisco</a>, <a href="/tags/openconnect/">openconnect</a>, <a href="/tags/vpn/">vpn</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Using a Cisco SSL VPN without a GUI.</p>
+<h4>Install packages</h4>
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/01/27/cisco-ssl-vpn-from-cli/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/01/21/pfx-from-crt-and-key/">pfx from crt and key and into your ASA</a></h1>
+                <h2>Tuesday, January 21, 2014 <span>&raquo;</span> <a href="/tags/asa/">asa</a>, <a href="/tags/pfx/">pfx</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Some devices that use certificates require them to be uploaded in pfx format.</p>
+
+<p>What is pfx?</p>
+
+
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/01/21/pfx-from-crt-and-key/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/01/17/gahh...tmpreaper/">gahh...tmpreaper</a></h1>
+                <h2>Friday, January 17, 2014 <span>&raquo;</span> <a href="/tags/find/">find</a>, <a href="/tags/linux/">linux</a>, <a href="/tags/tmp/">tmp</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>I am seeing the same issue as this <a href="https://lists.debian.org/debian-user/2005/06/msg00799.html">gentlemen</a> when trying to use <a href="http://manpag
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/01/17/gahh...tmpreaper/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2014/01/02/google-oauth2-reverse-proxy/">google oauth2 reverse proxy</a></h1>
+                <h2>Thursday, January 02, 2014 <span>&raquo;</span> <a href="/tags/google/">google</a>, <a href="/tags/oauth/">oauth</a>, <a href="/tags/proxy/">proxy</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Using google auth for an external resource.</p>
+
+<p><img src="/assets/images/googleoauth/googleoauthpre.png" alt="one"></p>
+
+<p>In this example our auth proxy 
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2014/01/02/google-oauth2-reverse-proxy/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/11/12/trying-out-landscape.io/">trying out landscape.io</a></h1>
+                <h2>Tuesday, November 12, 2013 <span>&raquo;</span> <a href="/tags/landscape/">landscape</a>, <a href="/tags/python/">python</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>I recently came across a service in beta scoring Python repositories on github.</p>
+<h4><a href="https://landscape.io">Landscape</a></h4>
+<p>In their own words
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/11/12/trying-out-landscape.io/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/11/04/user-args-to-python-variables/">user args to python variables</a></h1>
+                <h2>Monday, November 04, 2013 <span>&raquo;</span> <a href="/tags/python/">python</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Sometimes there is no choice to but to take a certain action from a configuration file or user input.  This can involve a device type or parameter that is esse
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/11/04/user-args-to-python-variables/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/10/24/tcl-in-IOS/">tcl in IOS</a></h1>
+                <h2>Thursday, October 24, 2013 <span>&raquo;</span> <a href="/tags/bgp/">bgp</a>, <a href="/tags/cisco/">cisco</a>, <a href="/tags/ios/">ios</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>IOS has come with a <a href="http://en.wikipedia.org/wiki/Tcl">TCL</a> interpreter baked in for awhile now.  It is suprisingly full featured and awesome.  Thes
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/10/24/tcl-in-IOS/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/10/23/bgp-traffic-shaping/">bgp traffic shaping</a></h1>
+                <h2>Wednesday, October 23, 2013 <span>&raquo;</span> <a href="/tags/bgp/">bgp</a>, <a href="/tags/cisco/">cisco</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Traffic engineering in BGP is probably the most common problem encountered.  This is not intended to be a complete primer on it, just a few thoughts.</p>
+<h4>B
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/10/23/bgp-traffic-shaping/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/10/17/lets-not-do-opsdev/">lets not do opsdev</a></h1>
+                <h2>Thursday, October 17, 2013 <span>&raquo;</span> <a href="/tags/devops/">devops</a>, <a href="/tags/kc/">kc</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       This is a talk I gave to the <a href="http://www.meetup.com/DevOps-Kansas-City/events/142487902/">devops KC</a> group at <a href="http://www.kauffman.org/what-we-do/programs/entrepreneurship/kauffman-laboratories-for-enterprise-creation">kauffman labs</a>.
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/10/17/lets-not-do-opsdev/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/10/09/dynamic-bash-prompts/">dynamic bash prompts</a></h1>
+                <h2>Wednesday, October 09, 2013 <span>&raquo;</span> <a href="/tags/bash/">bash</a>, <a href="/tags/debian/">debian</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Getting useful info into the prompt.  Using git as an example.</p>
+<h4>Shell script /usr/local/bin/prompt.sh</h4>
+
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/10/09/dynamic-bash-prompts/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/10/04/sqlite-truncate/">sqlite truncate</a></h1>
+                <h2>Friday, October 04, 2013 <span>&raquo;</span> <a href="/tags/sqlite/">sqlite</a>, <a href="/tags/truncate/">truncate</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       SQLite does not seem to support the <a href="http://dev.mysql.com/doc/refman/5.0/en/truncate-table.html">truncate</a> command.  This is hacky way to do it.
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/10/04/sqlite-truncate/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+        <div class="item">
+            <div class="header">
+                <h1><a href="/2013/10/04/fabric-basics-part-2/">fabric basics part 2</a></h1>
+                <h2>Friday, October 04, 2013 <span>&raquo;</span> <a href="/tags/fabric/">fabric</a>, <a href="/tags/python/">python</a></h2>
+            </div>
+            
+            <div class="body">
+                <p>
+                       
+                           <h4>Preamble</h4>
+<p>Small fabric examples of functionality continued from fabric basics.</p>
+<h4>Define server roles</h4>
+<p>Server roles allow you to group boxes for taking actio
+                       
+                   </p>
+            </div>
+
+            <div class="footer">
+                <p><a href="/2013/10/04/fabric-basics-part-2/">Continue Reading</a></p>
+            </div>
+        </div>
+    
+        
+    
+    
+        <div class="pagination">
+            <p><a href="/archives/">Read Posts From Archive</a></p>
+        </div>
+    
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

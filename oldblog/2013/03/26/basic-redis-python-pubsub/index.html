@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>basic redis python pubsub &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>basic redis python pubsub</h1>
+            <h2>Tuesday, March 26, 2013 <span>&raquo;</span> <a href="/tags/pubsub/">pubsub</a>, <a href="/tags/python/">python</a>, <a href="/tags/redis/">redis</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>I am serializing a dict as JSON and publishing it.  The subscriber will receive and print.  It is not necessary to use JSON as redis has awesome datatype compatibility with python: <a href="http://redis.io/topics/data-types">type ref</a>.</p>
+
+<p>Using pubsub to distribute messages is often the &#39;right way&#39;.</p>
+
+<p>This is using <a href="http://packages.debian.org/wheezy/python-redis">python-redis</a> from the debian repos.</p>
+<h4>Publishing an event:</h4>
+<p>This is just an example.</p>
+
+<pre><code>
+    import redis
+    import time
+    import json
+    r_server = redis.Redis("redis", db=1)
+    payload = {}
+    payload['event'] = 'played with legos'
+    payload['ts'] = time.time()
+    json_values = json.dumps(payload, separators=(',', ':'))
+    r_server.publish('kidsgames', json_values)
+</code></pre>
+<h4>Subscribing to events</h4>
+<pre><code>
+    import redis
+    import time
+    import json
+    r_server = redis.Redis("redis", db=1)
+    r_server.subscribe('kidsgames')
+    while True:
+        for m in r_server.listen():
+            if m['type'] == 'subscribe':
+                if m['data'] == 1:
+                    log.info('subscribed to: %s' % (m['channel']))
+            #this is what most pubsub submissions will match
+            elif m['type'] == 'message':
+                #our payload is in the data field of the response
+                print json.loads(m['data'])
+            else:
+                print m
+</code></pre>
+<h3>**** EDIT for Debian Wheezy ****</h3>
+<p>It seems redis.StrictRedis the way to go now.</p>
+<h4>Client Example Using StrictRedis</h4>
+<pre><code>
+import json
+import redis
+import time
+redis_server = "localhost"
+redis_db = 1
+redis_channels = ['kidsgames']
+r_server = redis.StrictRedis(redis_server, db=redis_db)
+
+def rsub_connect(rinstance, channels):
+    print 'subscribing to: %s' % (','.join(channels),)
+    sub = rinstance.pubsub()
+    map(sub.psubscribe, redis_channels)
+    return sub
+
+try:
+    pubsub = rsub_connect(r_server, redis_channels)
+    for m in pubsub.listen():
+        print m
+except redis.exceptions.ConnectionError as e:
+    print 'warning -- ', str(e)
+    raise
+</code></pre>
+<h4>Reference:</h4>
+<p><a href="http://redis.io/topics/pubsub">redis pubsub</a><br>
+<a href="https://redis-py.readthedocs.org/en/latest/">redis py doc</a><br>
+<a href="https://github.com/andymccurdy/redis-py">redis py github</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

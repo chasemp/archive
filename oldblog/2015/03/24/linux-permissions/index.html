@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>linux permissions &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>linux permissions</h1>
+            <h2>Tuesday, March 24, 2015 <span>&raquo;</span> <a href="/tags/linux/">linux</a>, <a href="/tags/permissions/">permissions</a>, <a href="/tags/sudo/">sudo</a></h2>
+        </div>
+        
+        <div class="body">
+            <p><strong>This Post is A Work in Progress</strong></p>
+
+<p>There are a ton of linux permissions references around but I have referenced a new<br>
+nuances lately and it has prompted me to write my own :)  Both as a way to dig into<br>
+a fun topic and as somewhere to point people with questions I trust.  Best beginning<br>
+overview <a href="https://en.wikipedia.org/wiki/File_system_permissions">https://en.wikipedia.org/wiki/File_system_permissions</a> but I have noticed<br>
+that what happens is a user comes across an aspect of permissions they have never seen.<br><br>
+Suddenly they question everything they know, or maybe that&#39;s just me.</p>
+
+<p>Tools:</p>
+
+<p>chmod<br>
+chown</p>
+<h3>Chmod</h3>
+<p>We want to change what abilities for the existing categories of:</p>
+
+<ul>
+<li>owner</li>
+<li>group</li>
+<li>everyone</li>
+</ul>
+
+<p>The same settings have different meanings in the case of files and folders.</p>
+<h3>Chown</h3>
+<p>We want to change who the owner and/or group refers too.</p>
+<h3>visudo</h3>
+<p>We want to change what escalated permissions a user can access safely.</p>
+
+<p>root    ALL=(ALL) ALL</p>
+<h3>su</h3>
+<p>Becoming or executing commands as another user</p>
+<h3>chattr (i.e. can root protect a file so well even they can&#39;t remove it?)</h3>
+<p>Change attributes on a file (usually to set an immutable bit)</p>
+
+<p>chattr +i filename.ext or remove chattr -i filename.ext</p>
+<h3>setcap</h3>
+<p>Setting capabilities</p>
+<h3>setuid</h3>
+<p>Setting a uid for a particular file</p>
+<h3>setgid</h3>
+<p>Setting the gid for a particular file</p>
+<h3>concepts</h3>
+<p>CAP_DAC_OVERRIDE &ndash; capability root has to &ldquo;ignore&rdquo; permissions</p>
+<h3>Reference</h3>
+<p><a href="https://en.wikipedia.org/wiki/Chmod">chmod</a><br>
+<a href="https://en.wikipedia.org/wiki/Chown">chown</a><br>
+<a href="http://www.linuxnix.com/2012/01/sticky-bit-set-linux.html">sticky bit</a> <br>
+<a href="http://ss64.com/bash/sudo.html">man sudo</a><br>
+<a href="https://help.ubuntu.com/community/Sudoers">sudoers</a><br>
+<a href="http://linux.die.net/man/7/capabilities">Capabilities</a><br>
+<a href="http://www.symantec.com/connect/articles/introduction-linux-capabilities-and-acls">Capabilities 2</a><br>
+<a href="http://blog.siphos.be/2013/05/overview-of-linux-capabilities-part-1/">Capabilities 3</a><br>
+<a href="http://unix.stackexchange.com/questions/128394/passing-capabilities-through-exec">so passing capabilities</a><br>
+<a href="http://unix.stackexchange.com/questions/51874/root-owned-program-with-setuid-bit-on">ping setuid</a><br>
+<a href="https://en.wikipedia.org/wiki/Setuid">setuid</a><br>
+<a href="https://en.wikipedia.org/wiki/Group_identifier">groups</a><br>
+<a href="http://unix.stackexchange.com/questions/21251/why-do-directories-need-the-executable-x-permission-to-be-opened">so directory perms</a><br>
+<a href="https://en.wikipedia.org/wiki/Inode">inode</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

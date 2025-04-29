@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>asa vpn user admin &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>asa vpn user admin</h1>
+            <h2>Monday, March 19, 2012 <span>&raquo;</span> <a href="/tags/asa/">asa</a>, <a href="/tags/cisco/">cisco</a>, <a href="/tags/vpn/">vpn</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>The ASA does VPN quite well.  I use some form of <a href="http://www.cisco.com/en/US/products/ps6120/products_configuration_example09186a00808efbd2.shtml">this</a> setup involving a self-signed CA on the ASA and the anyconnect client.  I also like to use the downloadable ACL feature with Cisco ACS or Freeradius.  If you get this going you need to administer users.  This is a brief showing of that.</p>
+<h4>Summary</h4><pre><code>asa# show vpn-sessiondb summary
+</code></pre>
+<pre><code>
+---------------------------------------------------------------------------
+VPN Session Summary                                                        
+---------------------------------------------------------------------------
+                               Active : Cumulative : Peak Concur : Inactive
+                             ----------------------------------------------
+AnyConnect Client            :      6 :       1193 :          28 :       18
+  SSL/TLS/DTLS               :      6 :       1193 :          28 :       18
+Clientless VPN               :      1 :          1 :           1
+  Browser                    :      1 :          1 :           1
+IKEv1 IPsec/L2TP IPsec       :      0 :        977 :           4
+---------------------------------------------------------------------------
+Total Active and Inactive    :     25             Total Cumulative :   2171
+Device Total VPN Capacity    :    250
+Device Load                  :    10%
+---------------------------------------------------------------------------
+</code></pre>
+<h4>Add/allow/remove</h4>
+<p>Available user commands.</p>
+<pre><code>asa# crypto ca server user-db ?
+</code></pre>
+<pre><code>
+  add        Add a user to the user enrollment database
+  allow      Allow enrollment for a user already in the user database
+  email-otp  Send One Time Password to the user via e-mail
+  remove     Remove a user from the user enrollment database
+  show-otp   Show One Time Password
+</code></pre>
+
+<p>Adding a user.</p>
+<pre><code>asa# crypto ca server user-db add testuser
+</code></pre>
+<pre><code>
+asa# crypto ca server user-db show-otp user testuser 
+Username: testuser
+OTP: 12345678910
+Enrollment Allowed Until: 09:27:46 PDT Thu Aug 22 2013
+</code></pre>
+
+<p>Removing a user.</p>
+<pre><code>asa# crypto ca server user-db remove testuser
+</code></pre>
+<pre><code>
+Are you sure you want to remove this user? [yes/no]: yes
+</code></pre>
+<h4>User Connection Details</h4>
+<p>Getting details on current sessions.</p>
+<pre><code>asa# show vpn-sessiondb anyconnect
+</code></pre>
+<pre><code>
+Username     : me                               Index        : 2252
+Assigned IP  : 10.x.x.x                         Public IP    : 1.1.1.1
+Protocol     : AnyConnect-Parent SSL-Tunnel <-- tunnel protocol
+License      : AnyConnect Essentials
+Encryption   : RC4 RC4                Hashing      : SHA1 SHA1
+Bytes Tx     : 131357                 Bytes Rx     : 90010
+Group Policy : <GP applied>           Tunnel Group : <tun grp used>
+Login Time   : 09:25:40 PDT Mon Aug 19 2013
+Duration     : 0h:06m:44s
+Inactivity   : 0h:00m:00s
+NAC Result   : Unknown
+VLAN Mapping : N/A                    VLAN         : none
+</code></pre>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

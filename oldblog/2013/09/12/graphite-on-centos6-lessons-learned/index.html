@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>graphite on centos6 lessons learned &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>graphite on centos6 lessons learned</h1>
+            <h2>Thursday, September 12, 2013 <span>&raquo;</span> <a href="/tags/centos/">centos</a>, <a href="/tags/graphite/">graphite</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Getting graphite going on CentOS 6</p>
+<h4>Installing packages</h4>
+<pre><code>
+yum update
+yum -y groupinstall 'Development Tools'
+sudo yum install http://yum.puppetlabs.com/el/6/products/i386/puppetlabs-release-6-7.noarch.rpm
+sudo yum install  http://mirror-fpt-telecom.fpt.net/fedora/epel/6/i386/epel-release-6-8.noarch.rpm
+yum update
+yum install -y pycairo mod_python mod_wsgi Django python-ldap python-memcached \
+               python-sqlite2  bitmap bitmap-fonts python-devel python-crypto \
+               pyOpenSSL gcc python-zope-filesystem python-zope-interface \
+               git zlib-static git tree rsync git python-pip python-devel httpd \
+               django-tagging links htop
+yum install twisted
+</code></pre>
+<pre><code>pip install whisper
+pip install carbon
+pip install graphite-web
+</code></pre><h4>Check for missing dependencies</h4><pre><code>me@vm:~# python &#47;tmp&#47;pip-build-me&#47;graphite-web&#47;check-dependencies.py
+
+All necessary dependencies are met.
+All optional dependencies are met.
+</code></pre><h4>Fixup config files and permissions</h4>
+<p>Fixing permissions since pip doesn&#39;t have distro specific knowledge to set this up.</p>
+
+<pre><code>
+chown -R apache:apache /opt/graphite/storage/
+</code></pre>
+
+<p>Setting up configurations from example defaults.</p>
+
+<pre><code>
+cp /opt/graphite/webapp/graphite/local_settings.py.example \
+              /opt/graphite/webapp/graphite/local_settings.py
+cp /opt/graphite/conf/carbon.conf.example /opt/graphite/conf/carbon.conf
+cp /opt/graphite/conf/storage-schemas.conf.example /opt/graphite/conf/storage-schemas.conf
+</code></pre>
+
+<p>Run database setup</p>
+
+<pre><code>
+python /opt/graphite/webapp/graphite/manage.py syncdb
+</code></pre>
+
+<p>Setup more configurations from defaults</p>
+
+<pre><code>
+cd /opt/graphite/conf/
+sudo cp graphite.wsgi.example graphite.wsgi
+sudo cp storage-schemas.conf.example storage-schemas.conf
+sudo cp carbon.conf.example carbon.conf
+cd /opt/graphite/webapp/graphite
+sudo cp local_settings.py.example local_settings.py
+</code></pre>
+
+<p>make sure if you are using django 1.4 this portion of local_settings.py is uncommented</p>
+
+<pre><code>
+# The default is 'django.db.backends.sqlite3' with file 'graphite.db'
+# located in STORAGE_DIR
+#
+DATABASES = {
+    'default': {
+        'NAME': '/opt/graphite/storage/graphite.db',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': ''
+    }
+}
+</code></pre>
+<h4>Configuring HTTPD</h4>
+<p>cat /etc/httpd/conf.d/wsgi.conf </p>
+<pre><code>WSGISocketPrefix &#47;var&#47;run&#47;wsgi
+LoadModule wsgi_module modules&#47;mod_wsgi.so
+</code></pre>
+<p>cat /etc/httpd/conf.d/graphite.conf</p>
+
+<pre><code>
+ServerName your.com
+Document "/opt/graphite/webapp"
+WSGIDaemonProcess graphite processes=5 threads=5 display-name='%{GROUP}' inactivity-timeout=120
+WSGIProcessGroup graphite
+WSGIApplicationGroup %{GLOBAL}
+WSGIImportScript /opt/graphite/conf/graphite.wsgi process-group=graphite application-group=%{GLOBAL}
+WSGIScriptAlias / /opt/graphite/conf/graphite.wsgi 
+_<_Location /_>_
+    AuthType None
+    Require all granted
+    Satisfy Any
+_<_/Location_>_
+Alias /content/ /opt/graphite/webapp/content/
+_<_Location "/content/"_>_
+    SetHandler None
+_<_/Location_>_
+Alias /media/ "@DJANGO_me@/contrib/admin/media/"
+_<_Location "/media/"_>_
+    SetHandler None
+_<_/Location_>_
+_<_Directory /opt/graphite/conf/_>_
+    Order deny,allow
+    Allow from all
+_<_/Directory_>_
+</code></pre>
+
+<p>Remove welcome default</p>
+<pre><code>rm -f &#47;etc&#47;httpd&#47;conf.d&#47;welcome.conf
+chown -R apache:apache &#47;opt&#47;graphite&#47;storage
+</code></pre><h4>Carbon LSB init script</h4><pre><code>n &#47;etc&#47;init.d&#47;carbon
+chmod +x  &#47;etc&#47;init.d&#47;carbon
+</code></pre>
+<p>contents:</p>
+
+<pre><code>
+#!/bin/bash -e
+
+#Define dependencies
+CARBON_BIN=/opt/graphite/bin/carbon-cache.py
+PGREP=/usr/bin/pgrep
+
+function verifyfile() {
+    local BIN=$1
+    test -x $BIN || { echo "$BIN not installed";
+        if [ "$1" = "stop" ]; then exit 0;
+        else exit 5; fi; }
+}
+
+# Check for missing binaries
+verifyfile "$CARBONB_BIN"
+verifyfile "$PGREP"
+
+case "$1" in
+    start)
+        if [ "$($PGREP -f $CARBON_BIN)" ]
+        then
+            echo "already running";
+            exit 0
+        fi
+
+        $CARBON_BIN start
+        $0 status
+        ;;
+    stop)
+
+        function exterminate() {
+            local PROC=$1
+            pid=$(pgrep -f $PROC)
+            if [ !"$pid" ]
+            then
+                kill -9 $pid;
+                sleep 1;
+            fi
+        }
+
+        exterminate "$CARBON_BIN"
+        $0 status
+        ;;
+    restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    status)
+
+        if [ "$($PGREP -f $CARBON_BIN)" ]
+        then
+            echo "running";
+        else
+            echo "not running";
+        fi
+        ;;
+    *)
+        $0 status
+        ;;
+esac
+</code></pre>
+<h4>Starting things</h4>
+<p>/etc/init.d/carbon restart<br>
+/etc/init.d/httpd restart</p>
+<h4>Notes</h4>
+<ol>
+<li><p>django errors</p>
+
+<p>If you try to start httpd and you see lots of errors, especially this error:</p>
+
+<p>[Thu Sep 12 12:45:52 2013] [error] IntegrityError: column user_id is not unique</p></li>
+</ol>
+
+<p>You need to update your local_settings.py as noted above.  And anytime you edit local_settings.py you need to rerun your <br>
+db sync.</p>
+<pre><code>&lt;pre&gt;&lt;code&gt;python &#47;opt&#47;graphite&#47;webapp&#47;graphite&#47;manage.py syncdb&lt;&#47;code&gt;&lt;&#47;pre&gt;
+</code></pre>
+<ol>
+<li><p>You can list all grouped installs via yum</p>
+
+<pre><code>yum grouplist</code></pre></li>
+<li><p>Twisted seems to throw this error a lot, it is a python path issue and is a pain to track down and fix.</p>
+
+<p>exceptions.ImportError: cannot import name _PY3</p></li>
+</ol>
+<h4>Reference</h4>
+<p><a href="http://graphite.wikidot.com/getting-your-data-into-graphite">getting stuff into graphite</a><br>
+<a href="http://stackoverflow.com/questions/9850581/django-error-when-installing-graphite-settings-data%0Abases-is-improperly-configu">django fixup</a><br>
+<a href="http://www.rampmeupscotty.com/blog/2012/08/07/installing-graphite-on-centos-6-dot-2/">centos 6 walk through</a><br>
+<a href="https://gist.github.com/dillera/1634493">gist based instructions</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

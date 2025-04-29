@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>mcollective bugs debian wheezy &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>mcollective bugs debian wheezy</h1>
+            <h2>Tuesday, July 16, 2013 <span>&raquo;</span> <a href="/tags/debian/">debian</a>, <a href="/tags/mcollective/">mcollective</a>, <a href="/tags/wheezy/">wheezy</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Debian Wheezy is on mcollective 2.0.  There are several agents that require at least 2.2.  You can download from the official PuppetLabs repository version but for Wheezy there are several bugs.  </p>
+<h4>Dowloading official Package</h4>
+<p>Do this:</p>
+
+<p><a href="http://docs.puppetlabs.com/guides/puppetlabs_package_repositories.html">http://docs.puppetlabs.com/guides/puppetlabs_package_repositories.html</a></p>
+<pre><code>wget http:&#47;&#47;apt-enterprise.puppetlabs.com&#47;puppetlabs-enterprise-release-extras_1.0-2_all.deb
+sudo dpkg -i puppetlabs-enterprise-release-extras_1.0-2_all.deb
+sudo apt-get update
+aptitude install mcollective
+</code></pre>
+<p>You will notice it doesn&#39;t work.  Suck.  Ok let&#39;s build our own.</p>
+<h4>Bug #1 <a href="http://projects.puppetlabs.com/issues/16572">fails to run on debian/ubuntu with ruby 1.9</a></h4>
+<p>The system default for ruby is 1.9.  Mcollective has ruby 1.8 paths hardcoded in several places, but<br>
+the main binary uses the environment settings.  This mismatch causes issues.</p>
+<h4>Bug demonstration</h4>
+<p>/etc/init.d/mcollective restart</p>
+
+<pre><code>
+/usr/lib/ruby/1.9.1/rubygems/custom_require.rb:36:in `require': cannot load such file -- mcollective (LoadError)
+        from /usr/lib/ruby/1.9.1/rubygems/custom_require.rb:36:in `require'
+    from /usr/sbin/mcollectived:3:in `<main>'
+</code></pre>
+<h4>mcollective puts files under ruby 1.8</h4><pre><code>dpkg -L mcollective-common
+</code></pre>
+<pre><code>
+/usr/lib/ruby/1.8/mcollective
+/usr/lib/ruby/1.8/mcollective/logger
+/usr/lib/ruby/1.8/mcollective/logger/syslog_logger.rb
+/usr/lib/ruby/1.8/mcollective/logger/base.rb
+/usr/lib/ruby/1.8/mcollective/logger/console_logger.rb
+/usr/lib/ruby/1.8/mcollective/logger/file_logger.rb
+</code></pre>
+<h4>But Wheezy uses 1.9</h4><pre><code>ruby 1.9.3p194 (2012-04-20 revision 35410) [x86_64-linux]
+</code></pre><h4>Simple Fix</h4>
+<p>vi bin/mcollectived</p>
+
+<p>This:</p>
+<pre><code>#!&#47;usr&#47;bin&#47;env ruby 
+</code></pre>
+<p>Becomes:</p>
+<pre><code>#!&#47;usr&#47;bin&#47;ruby1.8
+</code></pre><h4>Bug 2: <a href="http://projects.puppetlabs.com/issues/17804">ubuntu/debian mcollective missing package dependencies</a></h4>
+<p>Depencies are not complete for Debian.</p>
+<h4>Looks Like</h4><pre><code>&#47;usr&#47;lib&#47;ruby&#47;vendor_ruby&#47;1.8&#47;rubygems&#47;custom_require.rb:36:in
+`gem_original_require&#39;: no such file to load - -- stomp
+</code></pre><h4>Simple Fix</h4><pre><code>sudo apt-get install ruby-stomp
+</code></pre><h4>Stomp Connector Not Included</h4>
+<p>This is not my code, it is from somewhere in the mcollective world.  Including here<br>
+for completeness.</p>
+
+<p>mcollective/connectors/stomp.rb</p>
+
+<p><a href="https://raw.github.com/chasemp/bin/master/mcollective/stomp.rb">stomp.rb</a></p>
+<h4>Reference</h4>
+<p><a href="http://askubuntu.com/questions/15211/saving-deb-files-from-repositories-to-a-custom-location-for-installing-offline">download debs</a><br>
+<a href="http://projects.puppetlabs.com/issues/17804">puppet bug</a><br>
+<a href="https://groups.google.com/forum/#!topic/mcollective-users/5o8QT_myk0M">google groups info</a><br>
+<a href="http://serverfault.com/questions/386646/mcollective-cannot-load-the-stomp-library">sf mc info</a><br>
+<a href="https://github.com/puppetlabs/marionette-collective/tree/master/spec">mc on gh</a><br>
+<a href="https://groups.google.com/forum/#!msg/puppet-users/oYLo9VuZtTk/OCwyAWz-xc4J">google groups info two</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

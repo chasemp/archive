@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>cisco ssl vpn from cli &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>cisco ssl vpn from cli</h1>
+            <h2>Monday, January 27, 2014 <span>&raquo;</span> <a href="/tags/cisco/">cisco</a>, <a href="/tags/openconnect/">openconnect</a>, <a href="/tags/vpn/">vpn</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Using a Cisco SSL VPN without a GUI.</p>
+<h4>Install packages</h4><pre><code>aptitude install openconnect links vpnc-scripts
+</code></pre>
+<pre><code>
+/.
+/usr
+/usr/bin
+/usr/bin/openconnect
+/usr/share
+/usr/share/doc
+/usr/share/doc/openconnect
+/usr/share/doc/openconnect/AUTHORS
+/usr/share/doc/openconnect/copyright
+/usr/share/doc/openconnect/changelog.Debian.gz
+/usr/share/doc/openconnect/TODO
+/usr/lib
+/usr/lib/NetworkManager
+/usr/lib/NetworkManager/nm-openconnect-auth-dialog
+</code></pre>
+<h4>Get your certificate</h4><pre><code>links https:&#47;&#47;yourdomain&#47;+CSCOCA+&#47;login.html
+</code></pre>
+<p>looks like</p>
+
+<pre><code>
+Cisco Logo ASA - Local Certificate Authority                                           
+                                                                                         
+  ASA - Local Certificate Authority                                                      
+                                                                                         
+  Username          _____________________                                                
+  One-time Password _____________________                                                
+  [ Submit ]   [ Reset ]                                                                 
+  NOTE: On successful authentication:                                                    
+    * Open or Save the generated                                                         
+      certificate                                                                        
+    * Install the certificate in the                                                     
+      browser store                                                                      
+    * Close all the browser windows, and                                                 
+    * Restart the SSL VPN connection                                                     
+   (c)Cisco Systems, Inc. All rights reserved
+</code></pre>
+
+<p>Fill in the fields and [Submit].  Your cert will download.</p>
+<h4>Connect to your VPN endpoint</h4>
+<pre><code>
+#Try to connect
+openconnect -c $certificate -b\
+            --key-password=$keypass  \
+            -u $vpnuser $vpnendpoint
+</code></pre>
+
+<p>looks like:</p>
+
+<pre><code>
+Shutting down openconnect vpn tunnel.
+openconnect: no process found
+Attempting to connect to 199.15.160.254:443
+SSL negotiation with ra.deviantart.net
+Connected to HTTPS on ra.deviantart.net
+GET https://ra.deviantart.net/
+Got HTTP response: HTTP/1.0 302 Object Moved
+SSL negotiation with ra.deviantart.net
+Connected to HTTPS on ra.deviantart.net
+GET https://ra.deviantart.net/+webvpn+/index.html
+Please enter your username and password.
+Password: --your pass here ;) --
+</code></pre>
+<h4>Using your connection</h4>
+<p>You should see your tunnel interface if you run:</p>
+<pre><code>ifconfig | grep tun0 | awk &#39;{print $1}&#39;
+</code></pre>
+<p>Add routing for your remote network</p>
+<pre><code>route add -net 192.168.0.0 netmask 255.255.0.0 dev tun0
+</code></pre>
+<p>Now you should be able to hit an IP across the tunnel.</p>
+<h4>Notes</h4>
+<p>You can install and use the vpnc-script to manage DNS and things smartly.  You can use the &ndash;script flag:</p>
+<pre><code>--script &#47;usr&#47;share&#47;vpnc-scripts&#47;vpnc-script
+</code></pre>
+<p>Your certificate passphrase is probably the OTP you used</p>
+
+<p>If you make a script for managing connections you may need to clear out stale ones at the top</p>
+<pre><code>    killall openconnect
+    iptables -F
+</code></pre><h4>Reference</h4>
+<p><a href="http://www.infradead.org/openconnect/">openconnect</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

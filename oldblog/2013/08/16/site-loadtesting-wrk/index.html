@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>site loadtesting wrk &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>site loadtesting wrk</h1>
+            <h2>Friday, August 16, 2013 <span>&raquo;</span> <a href="/tags/loadtesting/">loadtesting</a>, <a href="/tags/wrk/">wrk</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Although tools like <a href="http://httpd.apache.org/docs/2.2/programs/ab.html">ab</a> and <a href="http://www.joedog.org/siege-home/">siege</a> are common place wrk seems really interesting.</p>
+<h4>Installing</h4><pre><code>git clone https:&#47;&#47;github.com&#47;wg&#47;wrk.git
+aptitude update
+aptitude install -y build-essential libssl-dev
+cd wrk
+
+make
+</code></pre>
+<pre><code>
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/wrk.o src/wrk.c
+src/wrk.c: In function ‘format_request’:
+src/wrk.c:478:9: warning: implicit declaration of function ‘strncasecmp’ [-Wimplicit-function-declaration]
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/net.o src/net.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/ssl.o src/ssl.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/aprintf.o src/aprintf.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/stats.o src/stats.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/units.o src/units.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/ae.o src/ae.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/zmalloc.o src/zmalloc.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/http_parser.o src/http_parser.c
+cc -std=c99 -Wall -O2 -D_REENTRANT -c -o obj/tinymt64.o src/tinymt64.c
+cc  -o wrk obj/wrk.o obj/net.o obj/ssl.o obj/aprintf.o obj/stats.o \
+obj/units.o obj/ae.o obj/zmalloc.o obj/http_parser.o obj/tinymt64.o -lpthread -lm -lcrypto -lssl
+</code></pre>
+<h4>Source host specfications</h4>
+<p><a href="javascript:toggleDiv('cpuspecs');">Show CPU Specs</a></p>
+
+<div id="cpuspecs" style="display:none;">
+<pre><code>
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU            5130  @ 2.00GHz
+stepping        : 6
+microcode       : 0xc6
+cpu MHz         : 2000.020
+cache size      : 4096 KB
+physical id     : 0
+siblings        : 2
+core id         : 0
+cpu cores       : 2
+apicid          : 0
+initial apicid  : 0
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx lm constant_tsc arch_perfmon pebs bts rep_good nopl aperfmperf pni dtes64 monitor ds_cpl vmx tm2 ssse3 cx16 xtpr pdcm dca lahf_lm dtherm tpr_shadow
+bogomips        : 4000.04
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 36 bits physical, 48 bits virtual
+power management:
+
+processor       : 1
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU            5130  @ 2.00GHz
+stepping        : 6
+microcode       : 0xc6
+cpu MHz         : 2000.020
+cache size      : 4096 KB
+physical id     : 3
+siblings        : 2
+core id         : 0
+cpu cores       : 2
+apicid          : 6
+initial apicid  : 6
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx lm constant_tsc arch_perfmon pebs bts rep_good nopl aperfmperf pni dtes64 monitor ds_cpl vmx tm2 ssse3 cx16 xtpr pdcm dca lahf_lm dtherm tpr_shadow
+bogomips        : 4000.48
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 36 bits physical, 48 bits virtual
+power management:
+
+processor       : 2
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU            5130  @ 2.00GHz
+stepping        : 6
+microcode       : 0xc6
+cpu MHz         : 2000.020
+cache size      : 4096 KB
+physical id     : 0
+siblings        : 2
+core id         : 1
+cpu cores       : 2
+apicid          : 1
+initial apicid  : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx lm constant_tsc arch_perfmon pebs bts rep_good nopl aperfmperf pni dtes64 monitor ds_cpl vmx tm2 ssse3 cx16 xtpr pdcm dca lahf_lm dtherm tpr_shadow
+bogomips        : 4000.48
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 36 bits physical, 48 bits virtual
+power management:
+
+processor       : 3
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU            5130  @ 2.00GHz
+stepping        : 6
+microcode       : 0xc6
+cpu MHz         : 2000.020
+cache size      : 4096 KB
+physical id     : 3
+siblings        : 2
+core id         : 1
+cpu cores       : 2
+apicid          : 7
+initial apicid  : 7
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx lm constant_tsc arch_perfmon pebs bts rep_good nopl aperfmperf pni dtes64 monitor ds_cpl vmx tm2 ssse3 cx16 xtpr pdcm dca lahf_lm dtherm tpr_shadow
+bogomips        : 4000.46
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 36 bits physical, 48 bits virtual
+power management:
+</code></pre>
+</div>
+
+<p><a href="javascript:toggleDiv('memspecs');">Show Mem Specs</a></p>
+
+<div id="memspecs" style="display:none;">
+<pre><code>
+MemTotal:       16473572 kB
+MemFree:        16194832 kB
+Buffers:             652 kB
+Cached:            74176 kB
+SwapCached:            0 kB
+Active:           143896 kB
+Inactive:          46656 kB
+Active(anon):     115776 kB
+Inactive(anon):      144 kB
+Active(file):      28120 kB
+Inactive(file):    46512 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Dirty:                16 kB
+Writeback:             0 kB
+AnonPages:        115752 kB
+Mapped:            12160 kB
+Shmem:               196 kB
+Slab:              31552 kB
+SReclaimable:      20640 kB
+SUnreclaim:        10912 kB
+KernelStack:         720 kB
+PageTables:         2460 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     8236784 kB
+Committed_AS:     188232 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       49480 kB
+VmallocChunk:   34359686268 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:       50560 kB
+DirectMap2M:    16726016 kB
+</code></pre>
+</div>
+
+<p>This server has a 1 Gig Intel NIC.</p>
+<h4>wrk usage</h4>
+<pre><code>
+Usage: wrk <options> <url>                            
+  Options:                                            
+    -c, --connections <N>  Connections to keep open   
+    -d, --duration    <T>  Duration of test           
+    -t, --threads     <N>  Number of threads to use   
+                                                      
+    -H, --header      <H>  Add header to request      
+    -M, --method      <M>  HTTP method                
+        --body        <B>  Request body               
+        --latency          Print latency statistics   
+        --timeout     <T>  Socket/request timeout     
+    -v, --version          Print version details      
+                                                      
+  Numeric arguments may include a SI unit (1k, 1M, 1G)
+  Time arguments may include a time unit (2s, 2m, 2h)
+</code></pre>
+<h4>WRK test: 1</h4><pre><code>me@box:~&#47;wrk# .&#47;wrk -c 100 -d 60 -t 30 http:&#47;&#47;webdos
+</code></pre>
+<p><img src="/assets/images/wrk/wrk1load.png" alt="diagram" title="wrk1load"></p>
+
+<pre><code>
+Running 1m test @ http://webdos
+  30 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     5.09s     6.81s   25.97s    86.54%
+    Req/Sec   328.61    826.17     8.22k    87.67%
+  560450 requests in 1.01m, 245.83MB read
+  Socket errors: connect 0, read 8, write 0, timeout 821
+Requests/sec:   9263.04
+Transfer/sec:      4.06MB
+</code></pre>
+
+<p>Minimal load all around.  Less than 1.0 in top.  Htop shows 20% CPU and <br>
+a small memory footprint.</p>
+<h4>WRK test: 2</h4><pre><code>me@box:~&#47;wrk# .&#47;wrk -c 1000 -d 60 -t 300 http:&#47;&#47;webdos
+</code></pre>
+<p><img src="/assets/images/wrk/wrk2cpu.png" alt="diagram" title="wrk2cpu"></p>
+
+<pre><code>
+Running 1m test @ http://webdos
+  300 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     9.63s     5.14s   25.99s    84.13%
+    Req/Sec    51.22    292.17     7.44k    95.93%
+  538639 requests in 1.00m, 236.26MB read
+  Socket errors: connect 0, read 808, write 0, timeout 23144
+Requests/sec:   8974.12
+Transfer/sec:      3.94MB
+</code></pre>
+
+<p>Load kicks up to 1.5-ish, and CPU hovers around 40-45%.  Memory<br>
+footprint stills manageable.</p>
+<h4>WRK test: 3</h4><pre><code>me@box:~&#47;wrk# .&#47;wrk -c 10000 -d 60 -t 1000 http:&#47;&#47;webdos
+</code></pre>
+<p><img src="/assets/images/wrk/wrk3cpu.png" alt="diagram" title="wrk3cpu"></p>
+
+<pre><code>
+Running 1m test @ http://webdos
+  1000 threads and 10000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     5.75s     6.79s   26.48s    76.56%
+    Req/Sec   113.72    490.76     9.44k    94.07%
+  561991 requests in 1.00m, 246.50MB read
+  Socket errors: connect 0, read 10046, write 0, timeout 285789
+Requests/sec:   9363.01
+Transfer/sec:      4.11MB
+</code></pre>
+
+<p>CPU is finally taking a hit.  Now using 70% of available resources most of the time, but wrk seems to be distributing load well.  Memory is now showing some definite usage, but still a CPU intensive operation.</p>
+<h4>WRK Test: 4</h4>
+<p>This is going well beyond our means to see what happens.</p>
+<pre><code>.&#47;wrk -c 100000 -d 60 -t 10000 http:&#47;&#47;webdos
+</code></pre>
+<p>&hellip;aaaaaaand the box completely died.</p>
+<h4>Reference</h4>
+<p><a href="https://github.com/wg/wrk">wrk on gh</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>simple site loadtesting &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>simple site loadtesting</h1>
+            <h2>Tuesday, June 25, 2013 <span>&raquo;</span> <a href="/tags/ab/">ab</a>, <a href="/tags/loadtesting/">loadtesting</a>, <a href="/tags/siege/">siege</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Throwing some load at your setup and seeing how it reacts.</p>
+
+<p>There is a difference between problem solving, and solving problems <em>at scale</em>.</p>
+<h4>Get some tools</h4>
+<p>On your user host:</p>
+<pre><code>aptitude install httping seige apache2 bc
+</code></pre>
+<p>On your webserver:</p>
+<pre><code>aptitude install htop
+</code></pre>
+<p>Seige is a lowkey load test tool, httping is nice for measuring response times in a consistent way while load testing, and apache is because we want the apache benchmark tool or &#39;ab&#39;.</p>
+<pre><code>root@&lt;lhost&gt;:~# which ab
+&#47;usr&#47;bin&#47;ab
+</code></pre><h4>Launching a test with seige: 3 concurrent users with 3 connections</h4><pre><code>~# siege -b -c 3 -r 3 &lt;webserver&gt;:80
+</code></pre>
+<pre><code>
+** SIEGE 2.70
+** Preparing 3 concurrent users for battle.
+The server is now under siege...
+HTTP/1.1 200   0.01 secs:     146 bytes ==> /
+HTTP/1.1 200   0.01 secs:     146 bytes ==> /
+HTTP/1.1 200   0.01 secs:     146 bytes ==> /
+HTTP/1.1 200   0.00 secs:     146 bytes ==> /
+HTTP/1.1 200   0.00 secs:     146 bytes ==> /
+HTTP/1.1 200   0.00 secs:     146 bytes ==> /
+HTTP/1.1 200   0.00 secs:     146 bytes ==> /
+HTTP/1.1 200   0.00 secs:     146 bytes ==> /
+HTTP/1.1 200   0.00 secs:     146 bytes ==> /
+done.
+Transactions:                  9 hits
+Availability:             100.00 %
+Elapsed time:               0.01 secs
+Data transferred:           0.00 MB
+Response time:              0.00 secs
+Transaction rate:         900.00 trans/sec
+Throughput:             0.13 MB/sec
+Concurrency:                3.00
+Successful transactions:           9
+Failed transactions:               0
+Longest transaction:            0.01
+Shortest transaction:           0.00
+</code></pre>
+
+<p>This is not a great indicator of performance under load.</p>
+
+<p>When I raise it to 3000 users at 10 requests I start seeing:</p>
+<pre><code>descriptor table full sock.c:108: Too many open files
+</code></pre>
+<p>So I raise the descriptor limit.</p>
+<pre><code>cat &#47;proc&#47;sys&#47;fs&#47;file-max
+1645928
+</code></pre>
+<p>You can see your limits using:</p>
+<pre><code>ulimit -Sn
+ulimit -Hn
+</code></pre>
+<p>Now I see too much of:</p>
+<pre><code>socket: connection timed out
+[error] socket: unable to connect sock.c:222: Operation already in progress
+</code></pre>
+<p>So I&#39;m not too happy with seige.  For some tests it seems ok.  For large test pools it hasn&#39;t won me over.  Then again the launching host isn&#39;t that great so maybe it&#39;s on my side.</p>
+
+<p>A good compromise I found was:</p>
+<pre><code>siege -b -c 1000 -r 3 &lt;webserver&gt;:80
+</code></pre><h4>Trying ab&hellip;</h4>
+<p>A thousand concurrent threads with a thousand requests.</p>
+<pre><code>ab -n 1000 -c 1000 http:&#47;&#47;&lt;webserver&gt;&#47;
+</code></pre>
+<pre><code>
+This is ApacheBench, Version 2.3 <$Revision: 655654 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking <webserver> (be patient)
+Completed 100 requests
+Completed 200 requests
+Completed 300 requests
+Completed 400 requests
+Completed 500 requests
+Completed 600 requests
+Completed 700 requests
+Completed 800 requests
+Completed 900 requests
+Completed 1000 requests
+Finished 1000 requests
+
+
+Server Software:        Apache/2.2.16
+Server Hostname:        <webserver>
+Server Port:            80
+
+Document Path:          /
+Document Length:        177 bytes
+
+Concurrency Level:      1000
+Time taken for tests:   0.656 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      453000 bytes
+HTML transferred:       177000 bytes
+Requests per second:    1523.82 [#/sec] (mean)
+Time per request:       656.246 [ms] (mean)
+Time per request:       0.656 [ms] (mean, across all concurrent requests)
+Transfer rate:          674.11 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:       11   15   2.9     15      21
+Processing:     6  158 209.8     32     631
+Waiting:        5  158 209.9     32     631
+Total:         20  174 210.7     53     646
+
+Percentage of the requests served within a certain time (ms)
+  50%     53
+  66%    234
+  75%    237
+  80%    238
+  90%    642
+  95%    645
+  98%    646
+  99%    646
+ 100%    646 (longest request)
+</code></pre>
+
+<p>ab gives great data, and can generate a lot of load with minimal impact on<br>
+the launching system.</p>
+
+<p>I eventually settled on:</p>
+<pre><code>ab -k -n 2000000 -c 50 http:&#47;&#47;&lt;webserver&gt;&#47;
+</code></pre>
+<p>Use http-keepalive (for consistency with production) at 2 million requests making 50 simultaneously.  These numbers were hitting a load of 8+ on my test server.  Anything averaging over 3.5 in production would be flagged to look at, but load testing is all about pushing limits.  </p>
+
+<p>Getting macro numbers from ab.  Run your tests a lot and look at overall numbers.</p>
+<pre><code>for i in {1..3}; do ab -n 1000 -c 1000 http:&#47;&#47;&lt;webserver&gt;&#47; &gt;&gt; test.txt; done
+</code></pre>
+<p>What is the average response time for request in the 95th percentile?</p>
+<pre><code>grep 95% test.txt | awk &#39;{total = total + $2}END{print total}&#39; 
+
+4556 #&lt;-- total number
+</code></pre>
+<p>I know I made 3 passes so my average 95th percentile response is:</p>
+<pre><code>echo &quot;4556 &#47; 3&quot; | bc
+
+1518 (ms)
+</code></pre>
+<p>This number is of limited value but adding your 95% through 100% and figuring out what your response times are for 95th perctile and above can be useful.</p>
+
+<p>Something like:</p>
+<pre><code>grep -A 3 95% test.txt | awk &#39;{total = total + $2}END{print total}&#39;
+</code></pre><h4>httping</h4>
+<p>I like using httping in the background or on another host as a consistent measure of my response times.</p>
+<pre><code>httping -c 10 &lt;webserver&gt; 
+</code></pre>
+<p>This makes 10 requests that look like:</p>
+<pre><code>connected to &lt;webserver&gt;:80, seq=0 time=0.97 ms 
+</code></pre>
+<p>I like to flood the host with requests:</p>
+<pre><code>httping &lt;webserver&gt;  -f
+</code></pre><h4>Reference</h4>
+<p><a href="http://linuxaria.com/article/put-your-site-under-siege?lang=en">using seige</a><br>
+<a href="http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/">increase file desc</a><br>
+<a href="http://www.serverwatch.com/tutorials/article.php/3936526/Load-Testing-and-Benchmarking-With-Siege.htm">using seige 2</a><br>
+<a href="http://httpd.apache.org/docs/2.2/programs/ab.html">using ab</a><br>
+<a href="http://www.joedog.org/siege-home/">seige home</a><br>
+<a href="http://linux.die.net/man/1/siege">seige man</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

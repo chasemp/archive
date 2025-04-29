@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>making trivial debian packages &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>making trivial debian packages</h1>
+            <h2>Tuesday, February 19, 2013 <span>&raquo;</span> <a href="/tags/deb/">deb</a>, <a href="/tags/debian/">debian</a>, <a href="/tags/dpkg/">dpkg</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>When possible it is beneficial having a canonical reference for resources installed on a server.  Binary packages have built in logic for upgrade, downgrade, install, etc.  This makes them an attractive, yet sometimes, overcomplicated distribution mechanisms.</p>
+
+<p>I am going to demonstrate making a simple script into a debian binary and installing it.  Adding this to an in-house repo would be a nice next step.</p>
+<h4>Getting Packages</h4>
+<p>Assuming you have dpkg but if not we need it.  Fakeroot we use to make packages with the right permissions on files.</p>
+<pre><code>aptitude install dpkg fakeroot lintian
+</code></pre>
+<p>We will be using dpkg-deb which is generally considered &#39;built in&#39; to debian.</p>
+
+<pre><code>
+me@vm:# dpkg -S /usr/bin/dpkg-deb
+dpkg: /usr/bin/dpkg-debø
+</code></pre>
+<h4>Package: my-files.</h4>
+<p>Starting at version 1.0 and meant for all architectures.  &#39;all&#39; is a common assignment for architecture when the files/scripts are interpreted such as with python or ruby.</p>
+<pre><code>mkdir my-files_1.0_all
+</code></pre><h4>Making my package tree</h4><pre><code>mkdir -p my-files_1.0_all&#47;usr&#47;local&#47;bin&#47;
+mkdir -p my-files_1.0_all&#47;DEBIAN
+</code></pre><h4>My script: aptitude easter eggs</h4><pre><code>nano my-files_1.0_all&#47;usr&#47;local&#47;bin&#47;moo
+</code></pre>
+<pre><code>
+#!/bin/bash
+aptitude -v -v -v -v -v moo
+</code></pre>
+<h4>Adding my &#39;control&#39; file</h4><pre><code>#this file contains my package metadata
+nano my-files_1.0_all&#47;DEBIAN&#47;control
+</code></pre><h4>Looks Like</h4>
+<pre><code>
+Package: my-files
+Priority: optional
+Section: misc
+Maintainer: Chase <mail@example.com>
+Architecture: all
+Version: 1.0
+Description: stuff I need
+</code></pre>
+<h4>Making my script executable on install</h4><pre><code>#postint will be run at the tail end of install by default
+echo &quot;chmod +x &#47;usr&#47;local&#47;bin&#47;moo&quot; &gt; my-files_1.0_all&#47;DEBIAN&#47;postinst
+#set correct permissions to avoid build errors
+chmod 555 my-files_1.0_all&#47;DEBIAN&#47;postinst
+</code></pre><h4>My full package tree</h4>
+<pre><code>
+my-files_1.0_all
+|-- DEBIAN
+|   |-- control
+|   `-- postinst
+`-- usr
+    `-- local
+        `-- bin
+            `-- moo
+</code></pre>
+<h4>Building my binary</h4>
+<p>Fakeroot should fix up your permissions, permissions are taken very literally by<br>
+dpkg-deb.  So if you build with a user that does not exist on a host that installs<br>
+this package things break.  But even if you don&#39;t run into that it is considered<br>
+bad form to leave your user permissions as artifacts on binary packaged files.</p>
+<pre><code>fakeroot dpkg-deb -b my-files_1.0_all&#47;
+</code></pre><h4>Looks Like</h4><pre><code>dpkg-deb: building package `my-files&#39; in `my-files_1.0_all.deb&#39;.
+</code></pre><h4>Installing and Examining my package</h4>
+<pre><code>
+me@vm:# dpkg -i my-files_1.0_all.deb 
+Selecting previously unselected package my-files.
+(Reading database ... 49666 files and directories currently installed.)
+Unpacking my-files (from my-files_1.0_all.deb) ...
+Setting up my-files (1.0) ...
+me@vm:# 
+
+me@vm:# dpkg -L my-files             
+/.
+/usr
+/usr/local
+/usr/local/bin
+/usr/local/bin/moo
+
+me@vm:~/pkg# dpkg -s my-files
+Package: my-files
+Status: install ok installed
+Priority: optional
+Section: misc
+Maintainer: Chase <mail@example.com>
+Architecture: all
+Version: 1.0
+Description: stuff I need
+</code></pre>
+<h4>Using Lintian</h4>
+<p>Lintian breaks down deb binaries and examines them.  If we are making a package for <br>
+repo distribution or contribution upstream in some manner we want this output to look<br>
+at nice as it can.  For this package I am just making sure we understanding what<br>
+compromises we are making.</p>
+
+<pre><code>
+me@vm:~/pkg$ lintian my-files_1.0_all.deb 
+E: my-files: control-file-has-bad-permissions postinst 0555 != 0755
+E: my-files: no-copyright-file
+E: my-files: extended-description-is-empty
+E: my-files: dir-in-usr-local usr/local/bin/
+E: my-files: file-in-usr-local usr/local/bin/moo
+W: my-files: file-in-unusual-dir usr/local/bin/moo
+W: my-files: script-not-executable usr/local/bin/moo
+</code></pre>
+<h4>Running my command</h4>
+<pre><code>
+me@vm:# moo
+All right, you win.
+
+                               /----\
+                       -------/      \
+                      /               \
+                     /                |
+   -----------------/                  --------\
+   ----------------------------------------------
+</code></pre>
+<h4>Reference</h4>
+<p><a href="http://manpages.ubuntu.com/manpages/hardy/man1/dpkg-deb.1.html">dpkg-deb reference</a><br>
+<a href="http://askubuntu.com/questions/62534/adding-post-deb-install-scripts">post install scripts doc</a><br>
+<a href="http://www.debian.org/doc/devel-manuals#maint-guidea">debian maint guide</a><br>
+<a href="http://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html">packaging basics</a><br>
+<a href="http://unix.stackexchange.com/questions/30303/how-to-create-a-deb-file-manually">se deb howto</a><br>
+<a href="http://ailoo.net/2009/06/repack-a-deb-archive-with-dpkg-deb/">deb howto blog post</a><br>
+<a href="http://tldp.org/HOWTO/html_single/Debian-Binary-Package-Building-HOWTO/#AEN108">tldp deb howto</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

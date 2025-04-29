@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>simple nat outbound cisco asa &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>simple nat outbound cisco asa</h1>
+            <h2>Wednesday, January 23, 2013 <span>&raquo;</span> <a href="/tags/asa/">asa</a>, <a href="/tags/cisco/">cisco</a>, <a href="/tags/nat/">nat</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>NAT on the ASA can get complicated but 90% of remote sites need some version of this basic configuration.</p>
+<h4>Interfaces</h4>
+<p>Establish your NAT roles.</p>
+
+<pre><code>
+!
+interface Ethernet0/0
+ nameif Outside
+ security-level 0
+ ip address <external_ip> <ext_mask>
+!
+interface Ethernet0/1
+ nameif Inside
+ security-level 100
+ ip address <interval_ip> <internal_mask>
+</code></pre>
+<h4>Client Pool</h4>
+<p>Define who gets an address for going out.</p>
+
+<pre><code>
+object network NAT-CLIENTS
+ !can be a subnet also, etc
+ range 192.168.1.1 192.168.1.10
+</code></pre>
+<h4>NAT Enable</h4>
+<p>Associate your clients with your external interface for NAT.</p>
+
+<pre><code>
+nat (Inside,Outside) source dynamic NAT-CLIENTS interface
+</code></pre>
+<h4>NOTES</h4>
+<ul>
+<li>This does not require extra global IP&#39;s.</li>
+<li>This dynamic IP may supercede intended static NAT IP&#39;s</li>
+<li>Firewall restrictions still apply. See docs on security levels.</li>
+</ul>
+<h4>Reference</h4>
+<p><a href="https://sso.cisco.com/autho/forms/CDClogin.html#wp1118157">cisco nat docs</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

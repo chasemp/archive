@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>using graphite events &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>using graphite events</h1>
+            <h2>Friday, May 17, 2013 <span>&raquo;</span> <a href="/tags/graphite/">graphite</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Graphite events allow you to overlay vertical bars on graphs for correlation of events and trending data.  I know the <a href="http://codeascraft.com/2010/12/08/track-every-release/" title="etsy events">etsy</a> guys use normal whisper files; presumabley with a 0.0xFacter and sum rollup instead of average.  That is a nice and reliable way to do it, but if you are looking for more flexbility using the  native (&#39;experimental&#39;) events feature may be useful.</p>
+
+<p><img src="/assets/images/events.png" alt="diagram" title="events"></p>
+<h4>Posting an event:</h4><pre><code>#!&#47;bin&#47;bash
+curl -X POST http:&#47;&#47;graphite&#47;events&#47; -d &#39;{&quot;what&quot;: &quot;did_stuff&quot;, &quot;tags&quot; : &quot;fun,times&quot;}&#39;
+</code></pre>
+<p>OR</p>
+
+<pre><code>
+#!/usr/bin/env python
+import json
+import urllib2
+
+one = {'what': 'did_stuff', 'tags' : 'fun,times'}
+req = urllib2.Request('http://graphite.da/events/',
+                      data=json.dumps(one),
+                      headers={'Content-type': 'text/plain'})
+r = urllib2.urlopen(req)
+
+print r.read()
+</code></pre>
+<h4>Retrieving events:</h4><pre><code>curl -X GET http:&#47;&#47;graphite&#47;events&#47;
+
+curl -X GET http:&#47;&#47;graphite&#47;events&#47;?tags=fun
+</code></pre><h4>Show me only stuff starting at an epoch time:</h4><pre><code>curl -X GET http:&#47;&#47;graphite&#47;events&#47;?from=1368778407
+</code></pre><h4>Getting lines on graphs</h4>
+<p>Now you have an event that shows up on http://graphite/events and is retrievable by curl.</p>
+<h4>Place it over your graph:</h4><pre><code>https:&#47;&#47;graphite&#47;render?target=my.metic.path&amp;target=drawAsInfinite(events(&#39;fun&#39;))
+</code></pre>
+<p>You can also go two tags deep which is similar in logic to a SQL join.  So the previous example<br>
+retrieves all &#39;fun&#39; tagged events.  Now we want to get &#39;fun&#39; and correlate with &#39;times&#39;.</p>
+<pre><code>https:&#47;&#47;graphite&#47;render?target=my.metic.path&amp;target=drawAsInfinite(events(&#39;fun&#39;, &#39;times&#39;))
+</code></pre>
+<p>This returns all &#39;fun&#39; tagged events that also have &#39;times&#39; tags.</p>
+<h4>Where this is useful in real world:</h4><pre><code>#all syncs
+https:&#47;&#47;graphite&#47;render?target=my.metic.path&amp;target=drawAsInfinite(events(&#39;code_sync&#39;))
+
+#Now code syncs from a specific user:
+https:&#47;&#47;graphite&#47;render?target=my.metic.path&amp;target=drawAsInfinite(events(&#39;code_sync&#39;, &#39;user&#39;))
+</code></pre><h4>Reference:</h4>
+<p><a href="http://graphite.readthedocs.org/en/1.0/functions.html">graphite docs</a><br>
+<a href="https://code.launchpad.net/%7Elucio.torre/graphite/add-events/+merge/69142">garphite events</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

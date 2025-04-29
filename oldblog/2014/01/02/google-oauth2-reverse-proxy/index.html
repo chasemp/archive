@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>google oauth2 reverse proxy &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>google oauth2 reverse proxy</h1>
+            <h2>Thursday, January 02, 2014 <span>&raquo;</span> <a href="/tags/google/">google</a>, <a href="/tags/oauth/">oauth</a>, <a href="/tags/proxy/">proxy</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Using google auth for an external resource.</p>
+
+<p><img src="/assets/images/googleoauth/googleoauthpre.png" alt="one"></p>
+
+<p>In this example our auth proxy is in a testbed so ports have been changed:</p>
+
+<p>NGINX is 8080<br>
+Google Auth Proxy is 4180<br>
+Apache is 80</p>
+<h4>Get a Google Oauth2 Token For Your App (webpage)</h4>
+<p><img src="/assets/images/googleoauth/googoauth1.png" alt="two"></p>
+
+<p><a href="https://developers.google.com/accounts/docs/OAuth2WebServer">instructions</a></p>
+<h4>Stand Up Nginx to listen on the Internet</h4>
+<pre><code>
+upstream staff {
+    server 127.0.0.1:80;
+}
+
+server {
+
+    listen   8080;
+    server_name staff.da
+
+    access_log  /var/log/nginx/localhost.access.log;
+
+        location / {
+            proxy_pass http://127.0.0.1:4180;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Scheme $scheme;
+            proxy_connect_timeout 1;
+            proxy_send_timeout 30;
+            proxy_read_timeout 30;
+        }
+
+}
+</code></pre>
+<h4>Bitly service doing reverse proxy using Google oAut</h4>
+<p><img src="/assets/images/googleoauth/googlebitly.png" alt="two"></p>
+
+<pre><code>
+/usr/lib/go/bin/google_auth_proxy \
+
+    #this is our redirection domain if auth is happy
+    --redirect-url="https://mydomain.com" \
+
+    #this is the registered domain
+    --google-apps-domain="http://mydomain.com" \
+
+    #this is your protected resource
+    --upstream=http://127.0.0.1:80/ \
+
+    --client-id=-->YOUR CLIENT ID FROM GOOOOOOOOOOOGLE<--
+    --client-secret=-->YOUR CLIENT SECRETE<--\
+
+    --cookie-secret=wtfmysecrettokenreplacethis
+
+</code></pre>
+<h4>Visit your Nginx service in a browser&hellip;</h4>
+<p>&hellip;and get redirected to the google oauth2 handler.</p>
+
+<p>&ndash;redacted site&ndash;</p>
+
+<p><img src="/assets/images/googleoauth/googleoauthpage.jpg" alt="two"></p>
+
+<ul>
+<li>Click sign in with Google</li>
+<li>Accept that this web page wants to access your account auth</li>
+<li>Sign in (or if you are already signed in well played!)</li>
+<li>You get redirected to your site</li>
+</ul>
+<h4>Notes</h4>
+<ul>
+<li>Certain trails are hardcoded this can come in handy</li>
+</ul>
+
+<pre><code>
+    #apache2.0 style
+    Redirect /oauth/callback /
+    Redirect /oauth2/callback /
+</code></pre>
+
+<ul>
+<li><p>If you have mydomain.org and you authenticate to <a href="mailto:you@funtimes.org">you@funtimes.org</a> with google it will be rejected by the service.  You can whitelist emails to allow the domain/google email domain mismatch.</p>
+
+<p>&ndash;authenticated-emails-file=&ldquo;/root/email&rdquo; #one email per line</p></li>
+<li><p>You can also force the cookie domain</p>
+
+<p>&ndash;cookie-domain=&ldquo;<a href="http://mydomain.org">http://mydomain.org</a>&rdquo; \</p></li>
+</ul>
+<h4>Reference</h4>
+<p><a href="https://github.com/bitly/google_auth_proxy">bitly provider</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

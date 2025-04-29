@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>freeradius external authentication &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>freeradius external authentication</h1>
+            <h2>Monday, September 16, 2013 <span>&raquo;</span> <a href="/tags/freeradius/">freeradius</a>, <a href="/tags/python/">python</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Installing Freeradius</h4><pre><code>aptitude install freeradius
+</code></pre>
+<pre><code>
+Package: freeradius
+Status: install ok installed
+Maintainer: Josip Rodin <joy-packages@debian.org>
+Architecture: amd64
+Version: 2.1.10+dfsg-2+squeeze1
+</code></pre>
+<h4>Installing example external auth script</h4><pre><code>git clone https:&#47;&#47;github.com&#47;chasemp&#47;fradiusauth.git
+cp fradiusauth&#47;fradiusauth.py &#47;usr&#47;local&#47;bin&#47;
+cp fradiusauth&#47;libradclient.py &#47;usr&#47;local&#47;bin&#47;
+chmod +x &#47;usr&#47;local&#47;bin&#47;fradiusauth.py
+</code></pre>
+<p>Change &#39;chasemp&#39; user and password to yours.</p>
+<h4>Make the external script responsible for auth and add user</h4>
+<p>This signifies that freeradius should call your external script for authentication. It will wait for execution of the script to finish and use the exit code.  0 is considered a healthy and viable auth, and anything else is considered invalid.</p>
+
+<p>/etc/freeradius/users/</p>
+
+<pre><code>
+DEFAULT  Auth-Type = Accept
+         Exec-Program-Wait = "/usr/local/bin/fradiusauth.py %{User-Name} \
+                                                           '%{User-Password}' \
+                                                            %{Calling-Station-Id} \
+                                                            %{NAS-IP-Address} \
+                                                            %{Framed-Protocol}",
+         Fall-Through = Yes
+
+<yourusername>
+</code></pre>
+<h4>Add your client</h4>
+<p>This should reflect the calling IP the authentication host is calling from.</p>
+
+<p>/etc/freeradius/clients.conf</p>
+
+<pre><code>
+client 127.0.0.1 {
+  secret = radsecret
+  shortname = myhost
+  nastype = other
+}
+</code></pre>
+<h4>Testing authentication</h4>
+<p>There is a good and basic radius client implementation on gh called <a href="https://github.com/chasemp/py-radius.git">py-radius</a>.</p>
+
+<pre><code>
+git clone https://github.com/chasemp/py-radius.git
+cd py-radius
+python setup.py install
+</code></pre>
+<pre><code>libradclient.py 127.0.0.1 radsecret &lt;yourusername&gt; &lt;yourpass&gt;
+&lt;you&gt; authenticated
+</code></pre><h4>Notes</h4>
+<ol>
+<li>Freeradius support the &#39;reload&#39; command for init</li>
+<li>If you want to debug radius stop the service and launch in your terminal like &#39;/usr/bin/freeradius -X&#39;</li>
+<li>-X debugging sessions will receive incoming passwords <strong>unencrypted</strong></li>
+</ol>
+<h4>Referenence</h4>
+<p><a href="https://github.com/chasemp/fradiusauth">gh</a><br>
+<a href="https://github.com/btimby/py-radius">py radius</a><br>
+<a href="http://freeradius.org/">freeradius</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

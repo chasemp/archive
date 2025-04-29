@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>exploring elasticsearch _cat &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>exploring elasticsearch _cat</h1>
+            <h2>Wednesday, August 05, 2015 <span>&raquo;</span> <a href="/tags/elasticsearch/">elasticsearch</a></h2>
+        </div>
+        
+        <div class="body">
+            <p>==== Preamble</p>
+
+<p>If you want to index and search your documents with lucene then<br>
+Elasticsearch seems to be the popular way to do so while adding<br>
+redundandcy, clustering, and an API on top of Lucene.  Elasticsearch<br>
+has a collection of REST API&#39;s with one subset not returning json at all.<br>
+The _cat API is meant for humans.  While there are CLI tools made<br>
+for parsing json most of the popular tools we are used to are more<br>
+natively served with raw textual data.</p>
+<h4>Making sure the API is responding</h4>
+<p>It&#39;s worth noting that when a cluster is new and has no designated<br>
+master nodes this API seems to hang indefinitely.  If there is a splitbrain<br>
+problem the same thing occurs.  This can be really concerning if you are<br>
+in trouble master role wise as the API you expect to query will not respond.</p>
+<pre><code>[2015-09-16 17:04:08,233][DEBUG][action.admin.cluster.health] \
+[elastic-node] no known master node, scheduling a retry
+</code></pre>
+<p>There can be duplicate information across API calls.  For instance, in order<br>
+to make sense of the shards you undoubtably need the index status.  Whatever<br>
+endpoint is more appropriate is ultimately a matter of perspective.</p>
+<pre><code>curl -s &#39;http:&#47;&#47;localhost:9200&#47;&#39;
+</code></pre>
+<p>{<br>
+  &ldquo;status&rdquo; : 200,<br>
+  &ldquo;name&rdquo; : &ldquo;elastic-node&rdquo;,<br>
+  &ldquo;cluster_name&rdquo; : &ldquo;my-cluster-name&rdquo;,<br>
+  &ldquo;version&rdquo; : {<br>
+    &ldquo;number&rdquo; : &ldquo;1.7.1&rdquo;,<br>
+    &ldquo;build_hash&rdquo; : &ldquo;&rdquo;,<br>
+    &ldquo;build_timestamp&rdquo; : &ldquo;2015-07-29T09:54:16Z&rdquo;,<br>
+    &ldquo;build_snapshot&rdquo; : false,<br>
+    &ldquo;lucene_version&rdquo; : &ldquo;4.10.4&rdquo;<br>
+  },<br>
+  &ldquo;tagline&rdquo; : &ldquo;You Know, for Search&rdquo;<br>
+}</p>
+<h4>Cat</h4><pre><code>curl -s localhost:9200&#47;_cat&#47;
+</code></pre>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html">aliases</a><br>
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-allocation.html">allocation</a><br>
+count - document count<br>
+fielddata   -   field data by index<br>
+health      -   cluster health<br>
+indices     -   index overview and status<br>
+master      -   find current master node<br>
+nodes       -   node status(es)<br>
+pending_tasks   -   task backlog information <br>
+plugins     -   plugins and versions across all nodes<br>
+recovery    -   index/shard status with movement info<br>
+thread pool -   tons of info on active threads across nodes<br>
+shards      -   tons of info on shard states<br>
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-segments.html">segments</a>   -   low level segment info</p>
+<h4>_cat tricks</h4><h3>Seeing all possible columns</h3><pre><code>curl &#39;localhost:9200&#47;_cat&#47;master?help&#39;
+</code></pre>
+<p>id   |   | node id<br>
+host | h | host name<br>
+ip   |   | ip address<br>
+node | n | node name</p>
+<h3>Column headers</h3>
+<p>A note is this will not show columns for which there are no data.  This is<br>
+noticeable for a few endpoints such as fielddata especially.</p>
+<pre><code>curl &#39;localhost:9200&#47;_cat&#47;master?v&#39;
+</code></pre>
+<p>id                     host        ip            node<br>
+1234         elastic-node 10.0.0.143 elastic-node</p>
+<h3>Picking relevant column headers</h3><pre><code>curl localhost:9200&#47;_cat&#47;master?h=&#39;host&#39;
+
+elastic-node
+
+curl localhost:9200&#47;_cat&#47;master?h=&#39;host,ip&#39;
+
+elastic-node 10.0.0.143
+</code></pre><h4>Watching shard movement</h4><pre><code>curl -s &#39;localhost:9200&#47;_cat&#47;recovery?active_only=true&#39; | \
+awk &#39;{printf &quot;%-19s %6s %-12s =&gt; %-12s\n&quot;, $1, $13, $6, $7}&#39; | \
+sort -n -k2 -r
+
+myindex  59.1% elastic-node1  =&gt; elastic-node2
+</code></pre><h4>Reference</h4>
+<p><a href="https://aphyr.com/posts/323-call-me-maybe-elasticsearch-1-5-0">https://aphyr.com/posts/323-call-me-maybe-elasticsearch-1-5-0</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

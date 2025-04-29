@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>mysql full partition &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>mysql full partition</h1>
+            <h2>Friday, November 02, 2012 <span>&raquo;</span> <a href="/tags/mysql/">mysql</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Ever go to start mysql and there is not enough disk space.  We need to get MySQL past disk full warnings.</p>
+
+<p>I tried to:</p>
+<pre><code>&#47;etc&#47;init.d&#47;mysql start
+</code></pre>
+<p>And saw:</p>
+<pre><code>&#47;etc&#47;init.d&#47;mysql: ERROR: The partition with &#47;var&#47;lib&#47;mysql is too full! ... failed!
+</code></pre><h4>Usage</h4><pre><code>df -Th
+</code></pre>
+<pre><code>
+Filesystem    Type    Size  Used Avail Use% Mounted on
+/dev/sda1     ext3    7.6G  7.5G     0 100% /
+tmpfs        tmpfs    249M     0  249M   0% /lib/init/rw
+udev         tmpfs    244M  172K  244M   1% /dev
+tmpfs        tmpfs    249M     0  249M   0% /dev/shm
+overflow     tmpfs    1.0M  1.0M     0 100% /tmp
+.host:/trunk
+            vmhgfs    233G  127G  107G  55% /www/repo
+</code></pre>
+
+<p>So I want to take a look at my top disk hogs:</p>
+<pre><code>du -a | sort -nr | head
+</code></pre>
+<pre><code>
+7920858 .
+5334316 ./var
+3137636 ./var/log
+1220480 ./usr
+1079740 ./var/cache
+1073176 ./var/cache/apt
+1040900 ./var/cache/apt/archives
+983716  ./var/lib
+888564  ./var/log/kern.log
+852852  ./var/log/messages
+</code></pre>
+
+<p>Looks like /var/log and apt cache are out of control.</p>
+
+<p>many rm -fR&#39;s later&hellip;</p>
+
+<pre><code>
+/dev/sda1     ext3    7.6G  5.5G  1.7G  77% /
+tmpfs        tmpfs    249M     0  249M   0% /lib/init/rw
+udev         tmpfs    244M  172K  244M   1% /dev
+tmpfs        tmpfs    249M     0  249M   0% /dev/shm
+overflow     tmpfs    1.0M  1.0M     0 100% /tmp
+</code></pre>
+
+<p>Let&#39;s try to start:</p>
+<pre><code>&#47;etc&#47;init.d&#47;mysql start
+</code></pre>
+<pre><code>
+Starting MySQL (Percona Server) database server: mysqld ..
+Checking for corrupt, not cleanly closed and upgrade needing tables..
+ERROR 1030 (HY000) at line 2: Got error 28 from storage engine
+</code></pre>
+
+<p><a href="http://stackoverflow.com/questions/10631387/1030-got-error-28-from-storage-engine">StackOverflow</a> tells us this still means &#39;not enough disk space&#39;.</p>
+
+<p>Obviously we need to clean up /tmp</p>
+
+<pre><code>
+/dev/sda1     ext3    7.6G  5.5G  1.7G  77% /
+tmpfs        tmpfs    249M     0  249M   0% /lib/init/rw
+udev         tmpfs    244M  172K  244M   1% /dev
+tmpfs        tmpfs    249M     0  249M   0% /dev/shm
+overflow     tmpfs    1.0M  1.0M     0 100% /tmp
+</code></pre>
+<pre><code>rm -fR &#47;tmp&#47;*
+</code></pre>
+<pre><code>
+/dev/sda1     ext3    7.6G  5.5G  1.7G  77% /
+tmpfs        tmpfs    249M     0  249M   0% /lib/init/rw
+udev         tmpfs    244M  172K  244M   1% /dev
+tmpfs        tmpfs    249M     0  249M   0% /dev/shm
+overflow     tmpfs    1.0M     0  1.0M   0% /tmp
+</code></pre>
+<h4>Ta-da</h4><pre><code>&#47;etc&#47;init.d&#47;mysql start
+
+Starting MySQL (Percona Server) database server: mysqld already running.
+</code></pre><h4>Notes</h4><pre><code>aptitude install tmpreaper
+</code></pre><h4>Reference:</h4>
+<p><a href="http://packages.debian.org/search?keywords=tmpreaper">Debian tmpreaper</a><br>
+<a href="http://stackoverflow.com/questions/10631387/1030-got-error-28-from-storage-engine">so errors ref</a><br>
+<a href="http://www.merriam-webster.com/dictionary/ta-da">ta-da</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

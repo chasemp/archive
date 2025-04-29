@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>code test beginnings &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>code test beginnings</h1>
+            <h2>Friday, June 07, 2013 <span>&raquo;</span> <a href="/tags/python/">python</a>, <a href="/tags/test/">test</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Testing your code as you go.  Writing &#39;production&#39; code is really as much a set practices as it is a  specific coding ability.  Everyone breaks things.  When something breaks we will all fix it.  The trick is to always know when something breaks.</p>
+
+<p>How I currently see the world:</p>
+
+<ul>
+<li> Write code</li>
+<li> Run unit tests</li>
+</ul>
+
+<p>It continues on &hellip;</p>
+
+<ul>
+<li> Run integration tests</li>
+<li> Run QA/Functionality testing (this could be one and the same with previous)</li>
+<li> Test monitoring</li>
+<li> Test security</li>
+<li> Test at scale</li>
+</ul>
+
+<p>There are a lot of ways to break down this basic idea.  Some much better than this.  But I feel like if you can visualize these 7 you are going in the right direction.</p>
+<h4>Write Code</h4><pre><code>def what():
+    return &#39;123&#39;
+
+if __name__ == &#39;__main__&#39;:
+    print what()
+</code></pre>
+<p>This is my big application.  When I run it I see.</p>
+
+<pre><code>
+   123
+</code></pre>
+<h4>Unit Testing - Testing Small Things</h4>
+<p>My idea of unittesting is if every function and class takes care of itself the entire codebase is better off.</p>
+
+<p>Doctest is a way to write small tests into the docstring.  Some people do not consider this to be valid unittesting.  I think it&#39;s a good start.</p>
+<pre><code>def what():
+    &quot;&quot;&quot;
+    &gt;&gt;&gt; what()
+    &#39;123&#39;
+    &quot;&quot;&quot;
+    return &#39;123&#39;
+
+if __name__ == &#39;__main__&#39;:
+    what()
+</code></pre>
+<p>&#39;python -m doctest t.py&#39; returns nothing.</p>
+<h4>But:</h4><pre><code>&#39;python -m doctest t.py  -v&#39; returns useful output:
+
+Trying:
+    what()
+Expecting:
+    &#39;123&#39;
+ok
+1 items had no tests:
+    t
+1items passed all tests:
+   1 tests in t.what
+1 tests in 2 items.
+1 passed and 0 failed.
+Test passed.
+</code></pre>
+<p>Everything passed.  In the most basic sense the code in the doctstring returned expected results.</p>
+
+<p>What if my function code changes and the doctest becomes invalid?</p>
+
+<p>Change it to:</p>
+<pre><code>def what():
+    &quot;&quot;&quot;
+    &gt;&gt;&gt; what()
+    &#39;1234&#39;
+    &quot;&quot;&quot;
+    return &#39;123&#39;
+</code></pre>
+<p>Now we see:</p>
+
+<pre><code>
+<me>:~$ python -m doctest t.py -v
+Trying:
+    what()
+Expecting:
+    '1234'
+**********************************************************************
+File "t.py", line 3, in t.what
+Failed example:
+    what()
+Expected:
+    '1234'
+Got:
+    '123'
+1 items had no tests:
+    t
+**********************************************************************
+1 items had failures:
+   1 of   1 in t.what
+1 tests in 2 items.
+0 passed and 1 failed.
+***Test Failed*** 1 failures.
+<me>:~$ 
+</code></pre>
+<h4>You can run this as a pre-commit hook and you will never break this function without knowing.</h4><pre><code>mkdir repo
+cd repo
+git init
+nano pre-commit
+</code></pre>
+<p>Contents:</p>
+<pre><code>#!&#47;bin&#47;bash
+python -m doctest *
+
+cd .git&#47;hooks&#47;
+ln -s ..&#47;..&#47;pre-commit pre-commit
+cd ..&#47;..
+git add -A
+git commit -m &#39;test&#39;
+</code></pre>
+<p>We see our failure message:</p>
+
+<pre><code>
+**********************************************************************
+File "t.py", line 5, in t.what
+Failed example:
+    what()
+Expected:
+    '1234'
+Got:
+    '123'
+**********************************************************************
+1 items had failures:
+   1 of   1 in t.what
+***Test Failed*** 1 failures.
+</code></pre>
+
+<p>We can fix it and make good.</p>
+<h4>One step up from &#39;-m doctest&#39;</h4>
+<p>I like to use nose to run my tests.  It can handle tests written in multiple styles and most code review tools integrate with it.</p>
+<pre><code>aptitude install python-nose
+
+nano pre-commit
+</code></pre>
+<p>Contents:</p>
+<pre><code>#!&#47;bin&#47;bash
+nosetests --all-modules --traverse-namespace --with-doctest --exe
+</code></pre>
+<p>This output is more readable as your tests grow:</p>
+
+<pre><code>
+<me>:~/no$ git commit -m 'nose'
+F
+======================================================================
+FAIL: Doctest: t.what
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/doctest.py", line 2166, in runTest
+    raise self.failureException(self.format_failure(new.getvalue()))
+AssertionError: Failed doctest test for t.what
+  File "/Users/<me>/no/t.py", line 3, in what
+
+----------------------------------------------------------------------
+File "/Users/<me>/no/t.py", line 5, in t.what
+Failed example:
+    what()
+Expected:
+    '1234'
+Got:
+    '123'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.006s
+
+FAILED (failures=1)
+</code></pre>
+<h4>Separating your test from your function</h4>
+<p>Ok up until now we have been validating our docstring and that is valuable.  But it is also cluttered and can be unwieldy.  Writing a basic test function.  I also added &#39;-v&#39; to the nosetest hook.</p>
+
+<p>This function should literally start with &#39;test&#39;</p>
+
+<pre><code>
+def test_what():
+    assert what() == '123'
+
+def what():
+    return '123'
+
+if __name__ == '__main__':
+    print what()
+</code></pre>
+<h4>Looks like</h4>
+<pre><code>
+t.test_what ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+OK
+</code></pre>
+
+<p>Thus the groundlevel for self testing code.</p>
+<h4>Reference</h4>
+<p><a href="http://git-scm.com/book/en/Customizing-Git-Git-Hooks">git hooks doc</a><br>
+<a href="https://nose.readthedocs.org/en/latest/">nosetest</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

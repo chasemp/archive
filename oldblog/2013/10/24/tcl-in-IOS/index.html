@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>tcl in IOS &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>tcl in IOS</h1>
+            <h2>Thursday, October 24, 2013 <span>&raquo;</span> <a href="/tags/bgp/">bgp</a>, <a href="/tags/cisco/">cisco</a>, <a href="/tags/ios/">ios</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>IOS has come with a <a href="http://en.wikipedia.org/wiki/Tcl">TCL</a> interpreter baked in for awhile now.  It is suprisingly full featured and awesome.  These are some basic ideas and things I have included in my own scripts.</p>
+<h4>Printing out a message from your script</h4>
+<p>puts &ldquo;\nHello World!&rdquo;</p>
+<h4>Shut down an interface</h4>
+<p>puts &ldquo;\nShutdown loopback&rdquo;<br>
+ios_config &ldquo;interface Loopback0&rdquo; &ldquo;shutdown&rdquo;</p>
+<h4>Removing an advertised network from BGP</h4>
+<p>puts &ldquo;\nRemoving &#39;network 1.0.0.0 mask 255.255.255.0&#39;&rdquo;<br>
+ios_config &ldquo;router bgp l335&rdquo; &ldquo;address-family ipv4&rdquo; &ldquo;no network 1.0.0.0 mask 255.255.255.0&rdquo;</p>
+<h4>Echoing an affected portion of the configuration during execution</h4>
+<p>puts &ldquo;\nShow section BGP&rdquo;<br>
+puts [ exec &ldquo;show run | section bgp&rdquo; ]</p>
+<h4>Sleep for a certain amount of time then run a command</h4>
+<p>after 1000<br>
+puts [ exec &ldquo;show ip interface brief&rdquo; ]</p>
+<h4>Change MOTD banner to reflect some system status</h4>
+<p>puts &ldquo;\nsetting appropriate banner&rdquo;<br>
+ios_config &ldquo;no banner motd&rdquo;<br>
+ios_config &ldquo;banner motd c CURRENTLY UPDATING THIS CONFIGURATION c&rdquo;</p>
+<h4>Integration a TCL script</h4>
+<p>Instead of constantly running things like &ldquo;tclsh mystuff.tcl&rdquo; you can set an alias so the command is easier to use.</p>
+
+<p>Write your script and &#39;copy tftp flash:&#39;&hellip;</p>
+
+<p>So you see something like</p>
+
+<pre><code>
+asr01#dir
+Directory of bootflash:/
+   20  -rw-         100  Oct 22 2013 11:40:02 -07:00  mystuff.tcl
+</code></pre>
+
+<p>Then set an alias </p>
+<pre><code>alias exec mystuff tclsh flash:mystuff.tcl
+</code></pre>
+<p>Now you can just run your script using the &#39;mystuff&#39; command.</p>
+<h4>References</h4>
+<p><a href="http://www.sadikhov.com/forum/index.php?/topic/175724-tcl-scripting-in-ios-easy-to-understand-tutorial/">simple tcl in ios tutorial</a><br>
+<a href="http://www.cisco.com/en/US/docs/ios-xml/ios/ios_tcl/configuration/12-4t/nm-script-tcl.html">official cisco ios tcl docs</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

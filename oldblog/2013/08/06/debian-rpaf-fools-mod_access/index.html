@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>debian rpaf fools mod_access &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>debian rpaf fools mod_access</h1>
+            <h2>Tuesday, August 06, 2013 <span>&raquo;</span> <a href="/tags/debian/">debian</a>, <a href="/tags/rpaf/">rpaf</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>If you have a reverse proxy in front of apache you need a way to persist the original host IP for logging, etc.  <a href="http://stderr.net/apache/rpaf/">rpaf</a> does this.  Essentially handles letting apache see the proxy provided field of <a href="http://en.wikipedia.org/wiki/X-Forwarded-For">x-forward-for</a> so things are handled in a sane manner.</p>
+
+<p>Unfortunately this seems to have problems working with  <a href="http://httpd.apache.org/docs/2.0/mod/mod_access.html">mod_access</a>.</p>
+
+<p>Debian <a href="http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=697644">report</a><br>
+Debian <a href="http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=653330">report</a><br>
+ubuntu <a href="https://bugs.launchpad.net/ubuntu/+source/libapache2-mod-rpaf/+bug/1029003">report</a><br>
+poundlist <a href="http://www.apsis.ch/pound/pound_list/archive/2007/2007-01/1169244573000/index_html?fullMode=1#1169947453000">report</a></p>
+<h4>Everyone needs to authenticate</h4>
+<p>Deny from all, but if it is a valid user then it will trigger Satisfy Any.</p>
+
+<pre><code>
+    Order deny,allow
+    Deny from all
+    AuthType Basic
+    AuthName "Authentication Required"
+    AuthUserFile "/etc/htpasswd/.htpasswd"
+    Satisfy Any
+    Require valid-user
+</code></pre>
+<h4>Everyone needs to authenticate except for internal hosts</h4>
+<p>Deny from all but Satisfy Any is triggered by a &#39;192.&#39; host or valid auth.</p>
+
+<pre><code>
+    Order deny,allow
+    Deny from all
+    Allow from 192
+    AuthType Basic
+    AuthName "Authentication Required"
+    AuthUserFile "/etc/htpasswd/.htpasswd"
+    Satisfy Any
+    Require valid-user
+</code></pre>
+<h4>Looking-At-X-Foward-For</h4><pre><code>ngrep port 80
+</code></pre>
+<pre><code>
+##
+T 192.168.0.101:53639 -> 192.168.1.27:80 [AP]
+  GET /favicon.ico HTTP/1.1..User-Agent: Mozilla/5.0 
+  (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.36 (KHT
+  ML, like Gecko) Chrome/28.0.1500.71 Safari/537.36..
+  X-Forwarded-For: 99.9.236.147..Accept: */*..SSLClientCertS
+  tatus: NoClientCert..Accept-Language: en-US,en;q=0.8..
+  Authorization: Basic cnVzaDpYcDlndzNsMSEl..SSLClientCip
+  her: SSL_RSA_WITH_RC4_128_SHA, version=TLSv1.1, bits=128..
+  Host: graphite.deviantart.net..SSLSessionID: 71C838
+  5EF2B8A9FC5705BF7EBC8C15B10627835642A1D7157DB996C1FBE96F5B..
+   X-Cluster-Client-Ip: 99.9.236.147..
+##
+</code></pre>
+
+<p>&ndash;&gt; <code>X-Forwarded-For: 99.9.236.147</code></p>
+
+<p>In Apache my host shows up as: 99.9.236.147.</p>
+<h4>Hmmmm&hellip;.Access Granted</h4>
+<p>Apache&#39;s ACL system is still treating my requests as if they were sourced from 192.168.0.101.</p>
+
+<p>The configuration from &#39;Everyone needs to authenticate except for internal&#39; should allow<br>
+only internal hosts to bypass auth.  In this case it is allowing everyone because<br>
+Apache is not using the post-rpaf x-forward-for IP in its ACL lookup.  It is using the<br>
+IP of the reverse proxy.  This means everyone is allowed.</p>
+<h4>Workaround: Getting more specific with our allowances</h4>
+<p>Only allow specific internal ranges that do not include the reverse proxy referrer.  </p>
+
+<pre><code>
+    Order deny,allow
+    Deny from all
+    Allow from 192.168.1.
+    AuthType Basic
+    AuthName "Authentication Required"
+    AuthUserFile "/etc/htpasswd/.htpasswd"
+    Require valid-user
+    Satisfy Any
+</code></pre>
+
+<p>This is not a great fix as it allows for a future re-IP to cause chaos.</p>
+<h4>Possible Solution</h4>
+<p>Use <a href="https://github.com/ttkzw/mod_remoteip-httpd22">mode_remoteip</a></p>
+<h4>Reference</h4>
+<p><a href="http://httpd.apache.org/docs/2.0/mod/mod_access.html">mod_access docs</a><br>
+<a href="http://www.askapache.com/htaccess/apache-authentication-in-htaccess.html">ask apache doc</a><br>
+<a href="http://chrismorris.org/passing-ip-from-nginx-to-apache/">nginx x-forward-for</a><br>
+<a href="https://github.com/ttkzw/mod_remoteip-httpd22">mode_remoteip gh</a><br>
+<a href="http://us.generation-nt.com/answer/bug-697644-apache2-mod-rpaf-failure-work-authz-allow-deny-should-be-documented-help-210345472.html">use mod_remoteip</a><br>
+<a href="http://serverfault.com/questions/235648/apache-use-x-forwarded-for-for-allow">use setevn</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>

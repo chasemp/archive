@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="author" content="Chase Pettet">
+<meta name="description" content="notes and useful(?) things">
+<meta name="generator" content="mynt v0.2.3">
+
+<link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+<link rel="alternate" href="/feed.xml" type="application/atom+xml">
+
+<link rel="stylesheet" href="/assets/css/screen.css" type="text/css">
+<link rel="stylesheet" href="/assets/css/pygments.css" type="text/css">
+
+
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-40840221-1']);
+        _gaq.push(['_trackPageview']);
+        
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    
+    <title>fabric basics part 2 &ndash; devops type thoughts</title>
+</head>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+function toggleDiv(divId) {
+   $("#"+divId).toggle();
+}
+</script>
+
+<style type="text/css">
+<!--
+#nav ul li a {
+    color:white;
+}
+
+#nav ul li a:hover {color: blue;}
+-->
+</style>
+
+<body>
+    <div id="container">
+        <div id="nav">
+            <ul>
+                <li><a href="/about/">About</a></li>
+                <li><a href="/">Blog</a></li>
+                <li><a href="/archives/">Archives</a></li>
+                <li><a href="/useful/">Useful</a></li>
+                <li><a href="/feed.xml">Feed</a></li>
+            </ul>
+            
+            
+                <ul id="social">
+                    
+                    
+                    <li><a href="https://github.com/chasemp"><img src="/assets/images/social/github.png" width="16" height="16" alt="GitHub"></a></li>
+                    
+                    
+                    <li><a href="http://stackoverflow.com/users/chasemp"><img src="/assets/images/social/stack-overflow.png" width="16" height="16" alt="Stack Overflow"></a></li>
+                    
+                    
+                </ul>
+            
+        </div>
+        
+        <div id="header">
+            <h1><a href="/">devops type thoughts</a></h1>
+            
+        </div>
+        
+        <div id="content">
+            
+    <div class="item">
+        <div class="header">
+            <h1>fabric basics part 2</h1>
+            <h2>Friday, October 04, 2013 <span>&raquo;</span> <a href="/tags/fabric/">fabric</a>, <a href="/tags/python/">python</a></h2>
+        </div>
+        
+        <div class="body">
+            <h4>Preamble</h4>
+<p>Small fabric examples of functionality continued from fabric basics.</p>
+<h4>Define server roles</h4>
+<p>Server roles allow you to group boxes for taking actions against them as a cluster.</p>
+
+<pre><code>
+from fabric.api import env, sudo, parallel, roles
+
+env.roledefs = {
+    'web': ['host1', 'host2', 'host3', 'host4', 'host5'],
+}
+
+@roles('web')
+def uname():
+    sudo('uname -a')
+</code></pre>
+
+<pre><code>
+me@vm:$ time fab uname
+[host1] Executing task 'uname'
+[host1] sudo: uname -a
+[host1] out: Linux host1 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host1] out: 
+
+[host2] Executing task 'uname'
+[host2] sudo: uname -a
+[host2] out: Linux host2 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host2] out: 
+
+[host3] Executing task 'uname'
+[host3] sudo: uname -a
+[host3] out: Linux host3 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host3] out: 
+
+[host4] Executing task 'uname'
+[host4] sudo: uname -a
+[host4] out: Linux host4 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host4] out: 
+
+[host5] Executing task 'uname'
+[host5] sudo: uname -a
+[host5] out: Linux host5 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host5] out: 
+
+
+Done.
+Disconnecting from host3... done.
+Disconnecting from host4... done.
+Disconnecting from host5... done.
+Disconnecting from host1... done.
+Disconnecting from host2... done.
+
+real    0m11.328s
+user    0m0.396s
+sys 0m0.079s
+</code></pre>
+<h4>Run tasks in <a href="http://docs.fabfile.org/en/1.3.2/usage/parallel.html">parallel</a></h4>
+<p>Simultaneous instead of serial. Notice 2.6s vs. 11.328s above.</p>
+
+<pre><code>
+from fabric.api import env, sudo, parallel, roles
+
+env.roledefs = {
+    'web': ['host1', 'host2', 'host3', 'host4', 'host5'],
+}
+
+@parallel
+@roles('web')
+def uname():
+    sudo('uname -a')
+</code></pre>
+
+<pre><code>
+[host1] Executing task 'uname'
+[host2] Executing task 'uname'
+[host3] Executing task 'uname'
+[host4] Executing task 'uname'
+[host5] Executing task 'uname'
+[host5] sudo: uname -a
+[host4] sudo: uname -a
+[host3] sudo: uname -a
+[host2] sudo: uname -a
+[host1] sudo: uname -a
+[host5] out: Linux host5 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host5] out: 
+[host3] out: Linux host3 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host3] out: 
+[host4] out: Linux host4 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host4] out: 
+[host1] out: Linux host1 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host1] out: 
+[host2] out: Linux host2 3.2.0-4-amd64 #1 SMP Debian 3.2.46-1+deb7u1 x86_64 GNU/Linux
+[host2] out: 
+
+
+Done.
+
+real    0m2.164s
+user    0m0.549s
+sys 0m0.116s
+</code></pre>
+<h4>running commands on remote in bg</h4>
+<p>Because of how remote shells are spawned running commands in the background remotely can be tricky.  This example is provided in the wiki.  I did not get this to work reliably.</p>
+<pre><code>run(&quot;nohup %s &gt;&amp; &#47;dev&#47;null &lt; &#47;dev&#47;null &amp;&quot; % (cmd,))
+</code></pre>
+<p>I prefer using <a href="http://stackoverflow.com/questions/8775598/start-a-background-process-with-nohup-using-fabric">dtach</a></p>
+<pre><code>aptitude install dtach
+def bg_cmd(cmd):
+    run(&#39;dtach -n `mktemp -u &#47;tmp&#47;%s.XXXX` %s&#39; % (env.user, cmd)
+</code></pre>
+<p>This way if a job runs long or hangs you can always remote in and attach to the session to investigate.</p>
+<h4>Using sudo</h4>
+<p>If you need to escalate permissions on a remote host you can use sudo().  If you are using key based authentication with key forwarding you should have things configured so passwords are not required.  However, you can also have it prompt for a passphrase.</p>
+<pre><code>me@vm:$ time fab uname -H user@idle01
+[user@idle01] Executing task &#39;uname&#39;
+[user@idle01] sudo: uname -a
+[user@idle01] Passphrase for private key: 
+</code></pre>
+<p>Regular sudo commands with key auth can be run using run() as well.  This works fine.</p>
+<pre><code>def foo():
+    run(&#39;sudo whoami&#39;)
+</code></pre><h4>Notes</h4>
+<ol>
+<li><p>When restarting a daemon try <a href="https://github.com/fabric/fabric/issues/395">&#39;pty=False&#39;</a></p></li>
+<li><p>If this is a lab scenario with constantly changing host names and keys you can use <a href="http://docs.fabfile.org/en/1.4.2/usage/env.html#disable-known-hosts">disable known hosts</a></p></li>
+</ol>
+
+<p>in order to avoid&hellip;</p>
+<pre><code>fabric.exceptions.NetworkError: \
+Host key for OLDHOST did not match pre-existing key! \
+Server&#39;s key was changed recently, or possible man-in-the-middle attack.
+</code></pre><h4>Reference</h4>
+<p><a href="http://docs.fabfile.org/en/1.3.4/faq.html">fabric faq</a><br>
+<a href="https://github.com/fabric/fabric/issues/216">issue on running procs in bg</a><br>
+<a href="http://stackoverflow.com/questions/16367144/fabric-sudo-silently-failing">restarting daemon on so</a><br>
+<a href="http://www.linuxandlife.com/2012/01/make-sudo-stop-asking-for-password-when.html">sudo no password</a><br>
+<a href="http://www.pythonforbeginners.com/systems-programming/how-to-use-fabric-in-python/">fabric howto</a><br>
+<a href="http://stackoverflow.com/questions/3737003/can-i-prevent-fabric-from-prompting-me-for-a-sudo-password">sudo and prompts</a></p>
+
+        </div>
+    </div>
+
+        </div>
+        
+        <div id="footer">
+            <p>Copyright &copy; 2015 Chase Pettet &ndash; powered by <a href="http://mynt.mirroredwhite.com/">mynt</a></p>
+        </div>
+    </div>
+</body>
+</html>
